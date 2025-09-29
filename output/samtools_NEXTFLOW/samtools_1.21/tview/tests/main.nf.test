@@ -1,0 +1,7 @@
+nextflow.enable.dsl=2
+
+include { samtools_tview } from './main.nf'
+
+workflow test_tview {
+    samtools_tview()
+}
