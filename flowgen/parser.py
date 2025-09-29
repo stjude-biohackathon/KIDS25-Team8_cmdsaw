@@ -19,7 +19,7 @@ def build_prompt(help_text: str, tool_name: str, version: str = None) -> str:
     """
     schema = {
         "tool": "string",
-        "version": "string", 
+        "version": "string",
         "commands": [
             {
                 "name": "string",
@@ -48,7 +48,13 @@ def build_prompt(help_text: str, tool_name: str, version: str = None) -> str:
                 "stdout": "boolean",
                 "produces_files": ["list of strings"]
             }
-        ]
+        ],
+        "containers":
+            {
+                "bioconda": "string",
+                "docker": "string",
+                "singularity": "string"
+            }
     }
     
     example_json = {
@@ -106,16 +112,17 @@ Example format:
 {json.dumps(example_json, indent=2)}
 
 Important rules:
-- Output MUST be valid JSON only
-- No extra text or explanations
-- Use type "flag" for boolean flags (no argument)
-- Use type "path" for file/directory arguments
-- Use type "string" for text arguments
-- Use type "int" for integer arguments
-- Use type "float" for decimal arguments
-- Set "flag": true for parameters that don't take values
-- Set "flag": false for parameters that take values
-- Extract tool name as "{tool_name}" and version as "{version or 'unknown'}"
+- Only use information within the help text, do not use outside sources or context.
+- Output MUST be valid JSON only.
+- No extra text or explanations.
+- Use type "flag" for boolean flags (no argument).
+- Use type "path" for file/directory arguments.
+- Use type "string" for text arguments.
+- Use type "int" for integer arguments.
+- Use type "float" for decimal arguments.
+- Set "flag": true for parameters that don't take values.
+- Set "flag": false for parameters that take values.
+- Extract tool name as "{tool_name}" and version as "{version or 'unknown'}".
 """
     
     return prompt

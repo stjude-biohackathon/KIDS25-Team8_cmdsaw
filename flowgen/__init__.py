@@ -33,11 +33,16 @@ def cli():
               help='Output format (currently only WDL supported)')
 @click.option('--help-text', default=None,
               help='Path to help text file (for testing)')
+@click.option('--model', default="llama3.2:3b",
+              help='Name of the Ollama model to use')
+@click.option('--debug', is_flag=True,
+              help='Enable debug mode')
 @click.option('--outdir', default='./output', 
               help='Output directory')
 @click.option('--skip-validation', is_flag=True,
               help='Skip JSON validation')
-def generate(executable, discover_subcommands, output_format, help_text, outdir, skip_validation):
+def generate(executable, discover_subcommands, output_format, help_text,
+             model, debug, outdir, skip_validation):
     """Generate WDL tasks from executable help text"""
     
     if output_format not in ['wdl', 'nextflow']:
@@ -99,6 +104,14 @@ def generate(executable, discover_subcommands, output_format, help_text, outdir,
             'help_text': help_text_content,
             'is_subcommand': False
         })
+        
+    merged_commands = {}
+    for d in commands_to_process:
+        merged_commands.update(d)
+        
+    # debug
+    if debug:
+        console.print(Panel(Text(str(merged_commands), style="white"), title="Debug: Merged Commands"))
 
     # Process each command
     for cmd_info in commands_to_process:
@@ -109,7 +122,7 @@ def generate(executable, discover_subcommands, output_format, help_text, outdir,
         
         try:
             with console.status(f"[green]Calling LLM for {cmd_info['name']}. Check  [bold]{output_path}/llama_response.json[/bold] for streaming json build.", spinner="dots"):
-                json_response = call_model(prompt)
+                json_response = call_model(model = model, prompt = prompt)
             
             if not skip_validation:
                 with console.status("[bold green]Validating JSON response...", spinner="dots"):
