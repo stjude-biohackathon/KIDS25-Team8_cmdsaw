@@ -3,14 +3,51 @@
 Parser module - LLM interaction and JSON validation
 """
 import json
-import re
 import requests
 from typing import Dict, Any
 from rich.console import Console
-from rich.syntax import Syntax
-from rich.panel import Panel
+from langchain_core.messages import AIMessage
+from langchain_core.tools import tool
+from langchain_ollama import ChatOllama
+
 
 console = Console()
+SCHEMA = {
+        "tool": "string",
+        "version": "string",
+        "commands": [
+            {
+                "name": "string",
+                "description": "string",
+                "is_subcommand": "boolean",
+                "parameters": [
+                    {
+                        "name": "string",
+                        "short": "string or null",
+                        "type": "string (path|int|float|string|flag)",
+                        "required": "boolean",
+                        "flag": "boolean",
+                        "default": "string or null",
+                        "description": "string"
+                    }
+                ],
+                "positional_args": [
+                    {
+                        "name": "string",
+                        "type": "string",
+                        "description": "string", 
+                        "required": "boolean"
+                    }
+                ],
+                "stdin": "boolean",
+                "stdout": "boolean",
+                "produces_files": ["list of strings"]
+            }
+        ],
+        "bioconda": "string",
+        "docker": "string",
+        "singularity": "string"
+    }
 
 
 def build_prompt(help_text: str, tool_name: str, version: str = None) -> str:
@@ -124,64 +161,72 @@ Important rules:
 - Set "flag": false for parameters that take values.
 - Extract tool name as "{tool_name}" and version as "{version or 'unknown'}".
 """
-    
+
     return prompt
 
 
-def call_model(prompt: str, model: str = "llama3.1:8b") -> str:
+def call_model(prompt: str, model: str = "llama3.1:8b") -> CommandSchema:
     """
     Call Ollama model with streaming enabled.
     Stream output live, and optionally write to a file.
     """
-    url = "http://localhost:11434/api/generate"
+    # url = "http://localhost:11434/api/generate"
     console.print(f"[blue]Calling Ollama model[/blue] [bold cyan]{model}[/bold cyan]...")
 
-    payload = {
-        "model": model,
-        "prompt": prompt,
-        "stream": True,
-        "system": "You are a strict JSON generator. Only produce valid JSON objects. No extra text."
-    }
+    # payload = {
+    #     "model": model,
+    #     "prompt": prompt,
+    #     "stream": True,
+    #     "system": "You are a strict JSON generator. Only produce valid JSON objects. No extra text."
+    # }
+    
+    model = ChatOllama(
+        model=model,
+        temperature=0,
+        # other params...
+    )
 
     try:
-        # stream=True here is for requests, not Ollama
-        with requests.post(url, json=payload, stream=True, timeout=120) as response:
-            response.raise_for_status()
+        # # stream=True here is for requests, not Ollama
+        # with requests.post(url, json=payload, stream=True, timeout=120) as response:
+        #     response.raise_for_status()
 
-            collected_chunks = []
+        #     collected_chunks = []
 
-            out_file = "output/llama_response.json"  
-            file_handle = open(out_file, "w", encoding="utf-8") if out_file else None
+        #     out_file = "output/response.json"  
+        #     file_handle = open(out_file, "w", encoding="utf-8") if out_file else None
 
-            for line in response.iter_lines():
-                if line:
-                    try:
-                        data = json.loads(line.decode("utf-8"))
-                        chunk = data.get("response", "")
-                        collected_chunks.append(chunk)
+        #     for line in response.iter_lines():
+        #         if line:
+        #             try:
+        #                 data = json.loads(line.decode("utf-8"))
+        #                 chunk = data.get("response", "")
+        #                 collected_chunks.append(chunk)
 
-                        # Write to file immediately if specified
-                        if file_handle:
-                            file_handle.write(chunk)
-                            file_handle.flush()
+        #                 # Write to file immediately if specified
+        #                 if file_handle:
+        #                     file_handle.write(chunk)
+        #                     file_handle.flush()
 
-                        if data.get("done", False):
-                            break
-                    except json.JSONDecodeError:
-                        # Sometimes partial lines can appear
-                        continue
+        #                 if data.get("done", False):
+        #                     break
+        #             except json.JSONDecodeError:
+        #                 # Sometimes partial lines can appear
+        #                 continue
 
-            if file_handle:
-                file_handle.close()
+        #     if file_handle:
+        #         file_handle.close()
 
-            raw_response = "".join(collected_chunks)
-            cleaned_response = clean_json_response(raw_response)
-            return cleaned_response
+        #     raw_response = "".join(collected_chunks)
+        #     cleaned_response = clean_json_response(raw_response)
+        #     return cleaned_response
+        model_with_structure = model.with_structured_output(CommandSchema)
+        response = model_with_structure.invoke(prompt)
 
-    except requests.exceptions.ConnectionError:
-        raise Exception("Could not connect to Ollama. Make sure Ollama is running on localhost:11434")
     except Exception as e:
         raise Exception(f"Error calling Ollama: {e}")
+    
+    return response
 
 def clean_json_response(response: str) -> str:
     """
