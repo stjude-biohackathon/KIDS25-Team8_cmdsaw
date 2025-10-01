@@ -1,0 +1,7 @@
+name: samtools_flags
+description: Auto-generated Nextflow module for samtools flags
+keywords:
+  - samtools
+  - flags
+tools:
+  - samtools

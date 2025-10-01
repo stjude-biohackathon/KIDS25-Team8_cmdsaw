@@ -1,0 +1,7 @@
+nextflow.enable.dsl=2
+
+include { samtools_depad } from './main.nf'
+
+workflow test_depad {
+    samtools_depad()
+}

@@ -1,0 +1,7 @@
+name: samtools_head
+description: Auto-generated Nextflow module for samtools head
+keywords:
+  - samtools
+  - head
+tools:
+  - samtools
