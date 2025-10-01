@@ -12,6 +12,12 @@ class Parameter(TypedDict, total=False):
     is_flag: bool
     aliases: List[str]  # alternative names like -h, --help
 
+class ContainerInfo(TypedDict, total=False):
+    """Container image information for a tool from BioContainers."""
+    bioconda: Optional[str]
+    docker: Optional[str]
+    singularity: Optional[str]
+
 class EdamInput(TypedDict, total=False):
     """Represents an EDAM-standardized input."""
     name: str
@@ -51,6 +57,7 @@ class ToolInfo(TypedDict, total=False):
     global_parameters: List[Parameter]  # parameters that apply to all subcommands
     help_text: Optional[str]
     version_text: Optional[str]
+    containers: Optional[ContainerInfo]
     error: Optional[str]
 
 class WorkflowState(MessagesState):
