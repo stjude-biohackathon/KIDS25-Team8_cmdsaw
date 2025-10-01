@@ -1,7 +1,0 @@
-nextflow.enable.dsl=2
-
-include { samtools_head } from './main.nf'
-
-workflow test_head {
-    samtools_head()
-}

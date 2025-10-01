@@ -1,0 +1,2808 @@
+```
+json
+
+
+{
+
+ 
+ "
+tool
+":
+ "
+sam
+tools
+",
+
+ 
+ "
+version
+":
+ "
+1
+.
+13
+",
+
+ 
+ "
+descriptio
+":
+ "
+Tools
+ for
+ alignment
+ in
+ the
+ SAM
+ format
+",
+
+ 
+ "
+sub
+commands
+":
+ [
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+dict
+",
+
+     
+ "
+descriptio
+":
+ "
+create
+ a
+ sequence
+ dictionar
+ file
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ dict
+ [
+options
+]
+ <in
+.fasta
+>
+ <out
+.dict
+>",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+fasta
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ true
+,
+ "
+descriptio
+":
+ "
+FAST
+A
+ file
+ to
+ convert
+ to
+ dictionar
+"},
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ sequence
+ dictionar
+"},
+
+       
+ {"
+name
+":
+ "--
+fasta
+-format
+-version
+",
+ "
+type
+":
+ "
+int
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+FAST
+A
+ format
+ version
+ number
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+fa
+idx
+",
+
+     
+ "
+descriptio
+":
+ "
+index
+/
+extract
+ FAST
+A
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ fa
+idx
+ [
+options
+]
+ <in
+.fa
+>
+ <out
+.f
+aid
+x
+>",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+compress
+",
+ "
+type
+":
+ "
+bool
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Com
+press
+ the
+ FA
+I
+ index
+"},
+
+       
+ {"
+name
+":
+ "--
+fasta
+-format
+-version
+",
+ "
+type
+":
+ "
+int
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+FAST
+A
+ format
+ version
+ number
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+fq
+idx
+",
+
+     
+ "
+descriptio
+":
+ "
+index
+/
+extract
+ FAST
+Q
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ fq
+idx
+ [
+options
+]
+ <in
+.f
+q
+>
+ <out
+.f
+q
+idx
+>",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+compress
+",
+ "
+type
+":
+ "
+bool
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Com
+press
+ the
+ FI
+ index
+"},
+
+       
+ {"
+name
+":
+ "--
+fasta
+-format
+-version
+",
+ "
+type
+":
+ "
+int
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+FAST
+A
+ format
+ version
+ number
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+index
+",
+
+     
+ "
+descriptio
+":
+ "
+Index
+ a
+ BAM
+ file
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ index
+ [
+options
+]
+ <in
+.bam
+>
+ [
+out
+.index
+]",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+build
+",
+ "
+type
+":
+ "
+bool
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Build
+ the
+ index
+"},
+
+       
+ {"
+name
+":
+ "--
+keep
+-index
+-f
+asta
+",
+ "
+type
+":
+ "
+bool
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Don
+'t
+ delete
+ the
+ intermedi
+ index
+ FAST
+A
+ file
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+cal
+md
+",
+
+     
+ "
+descriptio
+":
+ "
+rec
+alculate
+ MD
+/N
+M
+ tags
+ and
+ '='
+ bases
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ cal
+md
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.bam
+",
+
+     
+ "
+parameters
+":
+ []
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+fix
+mate
+",
+
+     
+ "
+descriptio
+":
+ "
+fix
+ mate
+ informati
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ fix
+mate
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.bam
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+SO
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Sort
+ order
+ for
+ the
+ output
+ BAM
+ file
+"},
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+re
+header
+",
+
+     
+ "
+descriptio
+":
+ "
+replace
+ BAM
+ header
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ re
+header
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.bam
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+check
+-header
+",
+ "
+type
+":
+ "
+bool
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Check
+ that
+ the
+ output
+ file
+ has
+ a
+ valid
+ BAM
+ header
+"},
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+target
+cut
+",
+
+     
+ "
+descriptio
+":
+ "
+cut
+ fos
+mid
+ regions
+ (
+for
+ fos
+mid
+ pool
+ only
+)",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ target
+cut
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.bam
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"},
+
+       
+ {"
+name
+":
+ "--
+region
+-list
+-file
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+File
+ containin
+ the
+ target
+ regions
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+add
+re
+pl
+ac
+erg
+",
+
+     
+ "
+descriptio
+":
+ "
+adds
+ or
+ replaces
+ RG
+ tags
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ add
+re
+pl
+ac
+erg
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.bam
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"},
+
+       
+ {"
+name
+":
+ "--
+sample
+-list
+-file
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+File
+ containin
+ sample
+ names
+ and
+ their
+ correspon
+ RG
+ tags
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+mark
+dup
+",
+
+     
+ "
+descriptio
+":
+ "
+mark
+ duplicate
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ mark
+dup
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.bam
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"},
+
+       
+ {"
+name
+":
+ "--
+no
+-over
+write
+-output
+",
+ "
+type
+":
+ "
+bool
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+If
+ true
+,
+ the
+ output
+ file
+ will
+ not
+ be
+ overwritt
+ if
+ it
+ already
+ exists
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+amp
+lic
+on
+clip
+",
+
+     
+ "
+descriptio
+":
+ "
+clip
+ olig
+os
+ from
+ the
+ end
+ of
+ reads
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ amp
+lic
+on
+clip
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.bam
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"},
+
+       
+ {"
+name
+":
+ "--
+ol
+igo
+-file
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+File
+ containin
+ olig
+o
+ sequences
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+coll
+ate
+",
+
+     
+ "
+descriptio
+":
+ "
+shuffle
+ and
+ group
+ alignment
+ by
+ name
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ coll
+ate
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.bam
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"},
+
+       
+ {"
+name
+":
+ "--
+check
+-
+orientatio
+",
+ "
+type
+":
+ "
+bool
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Check
+ that
+ all
+ alignment
+ are
+ on
+ the
+ same
+ strand
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+cat
+",
+
+     
+ "
+descriptio
+":
+ "
+concat
+enate
+ BAM
+s
+",
+
+     
+ "
+usage
+":
+ "
+s sort [options] <in.bam> >out.bam",
+      "parameters": [
+        {"name": "--output-fmt", "type": "str", "required": false, "description": "Output format of the alignment"},
+        {"name": "--check-orientation", "type": "bool", "required": false, "description": "Check that all alignments are on the same strand"}
+      ]
+    },
+    {
+      "name": "split",
+      "description": "splits a file by read group",
+      "usage": "samtools split [options] <in.bam> >out.bam",
+      "parameters": [
+        {"name": "--output-fmt", "type": "str", "required": false, "description": "Output format of the alignment"},
+        {"name": "--check-orientation", "type": "bool", "required": false, "description": "Check that all alignments are on the same strand"}
+      ]
+    },
+    {
+      "name": "quickcheck",
+      "description": "quickly check if SAM/BAM/CRAM file appears intact",
+      "usage": "samtools quickcheck [options] <in.bam> >out.txt",
+      "parameters": [
+        {"name": "--output-fmt", "type": "str", "required": false, "description": "Output format of the alignment"}
+      ]
+    },
+    {
+      "name": "fastq",
+      "description": "converts a BAM to a FASTQ",
+      "usage": "samtools fastq [options] <in.bam> >out.fastq",
+      "parameters": [
+        {"name": "--output-fmt", "type": "str", "required": false, "description": "Output format of the alignment"}
+      ]
+    },
+    {
+      "name": "fasta",
+      "description": "converts a BAM to a FASTA",
+      "usage": "samtools fasta [options] <in.bam> >out.fasta",
+      "parameters": [
+        {"name": "--output-fmt", "type": "str", "required": false, "descriptitools
+ sort
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.bam
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"},
+
+       
+ {"
+name
+":
+ "--
+check
+-
+orientatio
+",
+ "
+type
+":
+ "
+bool
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Check
+ that
+ all
+ alignment
+ are
+ on
+ the
+ same
+ strand
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+split
+",
+
+     
+ "
+descriptio
+":
+ "
+s
+plits
+ a
+ file
+ by
+ read
+ group
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ split
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.bam
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"},
+
+       
+ {"
+name
+":
+ "--
+check
+-
+orientatio
+",
+ "
+type
+":
+ "
+bool
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Check
+ that
+ all
+ alignment
+ are
+ on
+ the
+ same
+ strand
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+quick
+check
+",
+
+     
+ "
+descriptio
+":
+ "
+quick
+ly
+ check
+ if
+ SAM
+/B
+AM
+/
+CR
+AM
+ file
+ appears
+ intact
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ quick
+check
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.txt
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+fast
+q
+",
+
+     
+ "
+descriptio
+":
+ "
+convert
+s
+ a
+ BAM
+ to
+ a
+ FAST
+Q
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ fast
+q
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.fast
+q
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+fasta
+",
+
+     
+ "
+descriptio
+":
+ "
+convert
+s
+ a
+ BAM
+ to
+ a
+ FAST
+A
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ fasta
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.fasta
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+import
+",
+
+     
+ "
+descriptio
+":
+ "
+Convert
+s
+ FAST
+A
+ or
+ FAST
+Q
+ files
+ to
+ SAM
+/B
+AM
+/
+CR
+AM
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ import
+ [
+options
+]
+ <in
+.fasta
+|
+in
+.fast
+q
+>
+ >
+out
+.bam
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"},
+
+       
+ {"
+name
+":
+ "--
+check
+-
+orientatio
+",
+ "
+type
+":
+ "
+bool
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Check
+ that
+ all
+ alignment
+ are
+ on
+ the
+ same
+ strand
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+bed
+cov
+",
+
+     
+ "
+descriptio
+":
+ "
+read
+ depth
+ per
+ BED
+ region
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ bed
+cov
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.bed
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+coverage
+",
+
+     
+ "
+descriptio
+":
+ "
+alignment
+ depth
+ and
+ percent
+ coverage
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ coverage
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.txt
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+depth
+",
+
+     
+ "
+descriptio
+":
+ "
+compute
+ the
+ depth
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ depth
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.txt
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+flag
+stat
+",
+
+     
+ "
+descriptio
+":
+ "
+simple
+ stats
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ flag
+stat
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.txt
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+idx
+stats
+",
+
+     
+ "
+descriptio
+":
+ "
+B
+AM
+ index
+ stats
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ idx
+stats
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.txt
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+phase
+",
+
+     
+ "
+descriptio
+":
+ "
+phase
+ heter
+ozy
+g
+otes
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ phase
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.bam
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+stats
+",
+
+     
+ "
+descriptio
+":
+ "
+generate
+ stats
+ (
+former
+ bam
+check
+)",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ stats
+ [
+options
+]
+ <in
+.bam
+>
+ >
+out
+.txt
+",
+
+     
+ "
+parameters
+":
+ [
+
+       
+ {"
+name
+":
+ "--
+output
+-f
+mt
+",
+ "
+type
+":
+ "
+str
+",
+ "
+required
+":
+ false
+,
+ "
+descriptio
+":
+ "
+Output
+ format
+ of
+ the
+ alignment
+"}
+
+     
+ ]
+
+   
+ },
+
+   
+ {
+
+     
+ "
+name
+":
+ "
+t
+view
+",
+
+     
+ "
+descriptio
+":
+ "
+display
+ alignment
+ in
+ a
+ text
+-based
+ viewer
+",
+
+     
+ "
+usage
+":
+ "
+sam
+tools
+ t
+view
+ [
+options
+]
+ <in
+.bam
+>",
+
+     
+ "
+parameters
+":
+ []
+
+   
+ }
+
+ 
+ ]
+
+{
+  "messages": [],
+  "executable": "samtools",
+  "tool_info": {
+    "tool": "samtools",
+    "help_text": "Program: samtools (Tools for alignments in the SAM format)\nVersion: 1.13 (using htslib 1.13+ds)\n\nUsage:   samtools <command> [options]\n\nCommands:\n  -- Indexing\n     dict           create a sequence dictionary file\n     faidx          index/extract FASTA\n     fqidx          index/extract FASTQ\n     index          index alignment\n\n  -- Editing\n     calmd          recalculate MD/NM tags and '=' bases\n     fixmate        fix mate information\n     reheader       replace BAM header\n     targetcut      cut fosmid regions (for fosmid pool only)\n     addreplacerg   adds or replaces RG tags\n     markdup        mark duplicates\n     ampliconclip   clip oligos from the end of reads\n\n  -- File operations\n     collate        shuffle and group alignments by name\n     cat            concatenate BAMs\n     merge          merge sorted alignments\n     mpileup        multi-way pileup\n     sort           sort alignment file\n     split          splits a file by read group\n     quickcheck     quickly check if SAM/BAM/CRAM file appears intact\n     fastq          converts a BAM to a FASTQ\n     fasta          converts a BAM to a FASTA\n     import         Converts FASTA or FASTQ files to SAM/BAM/CRAM\n\n  -- Statistics\n     bedcov         read depth per BED region\n     coverage       alignment depth and percent coverage\n     depth          compute the depth\n     flagstat       simple stats\n     idxstats       BAM index stats\n     phase          phase heterozygotes\n     stats          generate stats (former bamcheck)\n     ampliconstats  generate amplicon specific stats\n\n  -- Viewing\n     flags          explain BAM flags\n     tview          text alignment viewer\n     view           SAM<->BAM<->CRAM conversion\n     depad          convert padded BAM to unpadded BAM\n\n  -- Misc\n     help [cmd]     display this help message or help for [cmd]\n     version        detailed version information",
+    "version_text": "samtools 1.13\nUsing htslib 1.13+ds\nCopyright (C) 2021 Genome Research Ltd.\n\nSamtools compilation details:\n    Features:       build=configure curses=yes \n    CC:             gcc\n    CPPFLAGS:       -frelease  -Wdate-time -D_FORTIFY_SOURCE=2\n    CFLAGS:         -g -O2 -ffile-prefix-map=\ufffdBUILDPATH\ufffd=. -flto=auto -ffat-lto-objects -fstack-protector-strong -Wformat -Werror=format-security\n    LDFLAGS:        -Wl,-Bsymbolic-functions -flto=auto -Wl,-z,relro -Wl,-z,now\n    HTSDIR:         \n    LIBS:           \n    CURSES_LIB:     -lcurses\n\nHTSlib compilation details:\n    Features:       build=configure plugins=yes, plugin-path=/usr/local/lib/htslib:/usr/local/libexec/htslib:: libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes htscodecs=1.1.1\n    CC:             gcc\n    CPPFLAGS:       -I. -DSAMTOOLS=1 -Wdate-time -D_FORTIFY_SOURCE=2\n    CFLAGS:         -g -O2 -ffile-prefix-map=/build/htslib-TQtOKr/htslib-1.13+ds=. -flto=auto -ffat-lto-objects -fstack-protector-strong -Wformat -Werror=format-security -flto -fvisibility=hidden -flto -fvisibility=hidden\n    LDFLAGS:        -Wl,-Bsymbolic-functions -flto=auto -Wl,-z,relro -Wl,-z,now -Wl,-flto -fvisibility=hidden -Wl,-flto -fvisibility=hidden\n\nHTSlib URL scheme handlers present:\n    built-in:\t preload, data, file\n    crypt4gh-needed:\t crypt4gh\n    mem:\t mem",
+    "subcommands": [],
+    "global_parameters": [],
+    "error": "LLM parsing failed: Expecting ',' delimiter: line 252 column 4 (char 10935)"
+  }
+}
