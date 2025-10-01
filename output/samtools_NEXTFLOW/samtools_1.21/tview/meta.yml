@@ -1,7 +1,0 @@
-name: samtools_tview
-description: Auto-generated Nextflow module for samtools tview
-keywords:
-  - samtools
-  - tview
-tools:
-  - samtools

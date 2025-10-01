@@ -1,7 +1,0 @@
-name: samtools_samples
-description: Auto-generated Nextflow module for samtools samples
-keywords:
-  - samtools
-  - samples
-tools:
-  - samtools

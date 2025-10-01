@@ -1,7 +1,0 @@
-name: samtools_depad
-description: Auto-generated Nextflow module for samtools depad
-keywords:
-  - samtools
-  - depad
-tools:
-  - samtools
