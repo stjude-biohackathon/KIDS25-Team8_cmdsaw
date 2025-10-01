@@ -1,0 +1,7 @@
+nextflow.enable.dsl=2
+
+include { samtools_flags } from './main.nf'
+
+workflow test_flags {
+    samtools_flags()
+}

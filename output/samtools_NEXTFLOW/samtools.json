@@ -1,0 +1,106 @@
+{
+  "tool": "samtools",
+  "version": "1.22.1 (using htslib 1.22.1)",
+  "commands": [
+    {
+      "name": "flags",
+      "description": "",
+      "is_subcommand": true,
+      "parameters": [],
+      "positional_args": [],
+      "stdin": false,
+      "stdout": true,
+      "produces_files": []
+    },
+    {
+      "name": "head",
+      "description": "header viewer",
+      "is_subcommand": true,
+      "parameters": [],
+      "positional_args": [
+        {
+          "name": "file",
+          "type": "path",
+          "required": true
+        }
+      ],
+      "stdin": false,
+      "stdout": false,
+      "produces_files": ["sam file"]
+    },
+    {
+      "name": "tview",
+      "description": "text alignment viewer",
+      "is_subcommand": true,
+      "parameters": [],
+      "positional_args": [
+        {
+          "name": "file",
+          "type": "path",
+          "required": true
+        }
+      ],
+      "stdin": false,
+      "stdout": false,
+      "produces_files": []
+    },
+    {
+      "name": "view",
+      "description": "SAM<->BAM<->CRAM conversion",
+      "is_subcommand": true,
+      "parameters": [
+        {
+          "name": "-b",
+          "type": "flag",
+          "required": false
+        },
+        {
+          "name": "-h",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "positional_args": [],
+      "stdin": true,
+      "stdout": true,
+      "produces_files": ["bam file", "cramped bam file"]
+    },
+    {
+      "name": "depad",
+      "description": "convert padded BAM to unpadded BAM",
+      "is_subcommand": true,
+      "parameters": [],
+      "positional_args": [
+        {
+          "name": "file",
+          "type": "path",
+          "required": true
+        }
+      ],
+      "stdin": false,
+      "stdout": false,
+      "produces_files": ["unpadded bam file"]
+    },
+    {
+      "name": "samples",
+      "description": "list the samples in a set of SAM/BAM/CRAM files",
+      "is_subcommand": true,
+      "parameters": [
+        {
+          "name": "-b",
+          "type": "flag",
+          "required": false
+        },
+        {
+          "name": "-h",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "positional_args": [],
+      "stdin": true,
+      "stdout": true,
+      "produces_files": []
+    }
+  ]
+}
