@@ -1,7 +1,0 @@
-name: samtools_view
-description: Auto-generated Nextflow module for samtools view
-keywords:
-  - samtools
-  - view
-tools:
-  - samtools

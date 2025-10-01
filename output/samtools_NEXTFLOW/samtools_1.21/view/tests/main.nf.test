@@ -1,7 +1,0 @@
-nextflow.enable.dsl=2
-
-include { samtools_view } from './main.nf'
-
-workflow test_view {
-    samtools_view()
-}

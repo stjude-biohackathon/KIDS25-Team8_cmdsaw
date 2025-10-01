@@ -1,3 +1,10 @@
 click>=8.0.0
 rich>=13.0.0
 requests>=2.25.0
+langgraph
+langgraph-prebuilt
+langchain-core
+langchain-community
+langgraph-cli
+langgraph-api
+langchain-ollama
