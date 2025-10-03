@@ -7,9 +7,9 @@ from langgraph.graph import START, StateGraph, END
 from sub_agents.schema import WorkflowState, ToolInfo
 
 
-def capture_help_and_version(executable: str) -> Dict[str, str]:
-    """Run `<executable> --help` and `<executable> --version`, return text outputs."""
-    help_text, version_text = None, None
+def capture_help(executable: str) -> Dict[str, str]:
+    """Run `<executable> --help`, return output."""
+    help_text = None
 
     # --help
     try:
@@ -27,6 +27,13 @@ def capture_help_and_version(executable: str) -> Dict[str, str]:
     except Exception as e:
         raise Exception(f"Error running {executable} --help: {e}")
 
+    return {"help_text": help_text}
+
+
+def capture_version(executable: str) -> Dict[str, str]:
+    """Run `<executable> --version`, return text outputs."""
+    version_text = None
+
     # --version
     try:
         result = subprocess.run(
@@ -40,7 +47,7 @@ def capture_help_and_version(executable: str) -> Dict[str, str]:
     except Exception:
         version_text = None
 
-    return {"help_text": help_text, "version_text": version_text}
+    return {"version_text": version_text}
 
 
 def invocation_agent(state: WorkflowState) -> Dict[str, Any]:
@@ -54,13 +61,14 @@ def invocation_agent(state: WorkflowState) -> Dict[str, Any]:
 
     try:
         # Capture CLI text
-        cli_output = capture_help_and_version(executable)
+        help_output = capture_help(executable)
+        version_output = capture_version(executable)
         
         # Create basic tool info with raw text
         tool_info: ToolInfo = {
             "tool": executable,
-            "help_text": cli_output["help_text"],
-            "version_text": cli_output["version_text"],
+            "help_text": help_output["help_text"],
+            "version_text": version_output["version_text"],
             "subcommands": [],
             "global_parameters": []
         }
@@ -90,8 +98,8 @@ invocation_builder.add_edge("invocation_agent", END)
 invocation_graph = invocation_builder.compile()
 
 
-if __name__ == "__main__":
-    # Simple test
-    test_state = {"executable": "samtools"}
-    result = invocation_graph.invoke(test_state)
-    print(json.dumps(result, indent=2))
+# if __name__ == "__main__":
+#     # Simple test
+#     test_state = {"executable": "samtools"}
+#     result = invocation_graph.invoke(test_state)
+#     print(json.dumps(result, indent=2))
