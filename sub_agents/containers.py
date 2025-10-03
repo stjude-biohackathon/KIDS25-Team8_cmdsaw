@@ -9,8 +9,6 @@ def request(executable: str, version: str) -> dict:
         if r.status_code == 200:
             data = r.json()
 
-            # Parse requests output:
-
             # Initialize variables to hold image names
             bioconda = docker = singularity = None
             images = data.get("images", [])
@@ -106,3 +104,23 @@ def container_agent(state: WorkflowState) -> Dict[str, Any]:
         }
 
     return out
+
+# Create invocation & parser graphs subgraph
+graph_builder = StateGraph(WorkflowState)
+graph_builder.add_node("invocation_agent", invocation_agent)
+graph_builder.add_node("parsing_version_agent", parsing_version_agent)
+graph_builder.add_node("container_agent", container_agent)
+graph_builder.add_edge(START, "invocation_agent")
+graph_builder.add_edge("invocation_agent", "parsing_version_agent")
+graph_builder.add_edge("parsing_version_agent", "container_agent")
+graph_builder.add_edge("container_agent", END)
+
+# Compile the invocation graph for export
+invocation_graph = graph_builder.compile()
+
+
+# if __name__ == "__main__":
+#     # Simple test
+#     test_state = {"executable": "bedtools"}
+#     result = invocation_graph.invoke(test_state)
+#     print(json.dumps(result, indent=2))

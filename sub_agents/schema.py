@@ -43,9 +43,10 @@ class StandardizedTool(TypedDict, total=False):
 
 class Subcommand(TypedDict, total=False):
     """Represents a CLI subcommand."""
-    name: str
+    command: str
+    help_text: Optional[str]
     description: Optional[str]
-    parameters: List[Parameter]
+    parameters: Optional[List[Parameter]]
     usage: Optional[str]
 
 class ToolInfo(TypedDict, total=False):
@@ -69,17 +70,14 @@ class WorkflowState(MessagesState):
     # Invocation agent outputs
     tool_info: Optional[ToolInfo]
     
-    # Parsing agent outputs  
-    parsed_subcommands: Optional[List[Subcommand]]
-    
     # Standardization agent outputs
     standardized_tools: Optional[List[StandardizedTool]]
-    standardized_parameters: Optional[List[Parameter]]
     
     # Troubleshooting agent outputs
     validation_errors: Optional[List[str]]
     suggested_fixes: Optional[List[str]]
     
     # Generator agent outputs
-    generated_workflow: Optional[str]
-    workflow_metadata: Optional[Dict[str, Any]]
+    generated_nextflow: Optional[str]
+    generated_wdl: Optional[str]
+    metadata: Optional[Dict[str, Any]]
