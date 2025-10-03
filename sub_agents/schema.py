@@ -12,6 +12,12 @@ class Parameter(TypedDict, total=False):
     is_flag: bool
     aliases: List[str]  # alternative names like -h, --help
 
+class ContainerInfo(TypedDict, total=False):
+    """Container image information for a tool from BioContainers."""
+    bioconda: Optional[str]
+    docker: Optional[str]
+    singularity: Optional[str]
+
 class EdamInput(TypedDict, total=False):
     """Represents an EDAM-standardized input."""
     name: str
@@ -37,9 +43,10 @@ class StandardizedTool(TypedDict, total=False):
 
 class Subcommand(TypedDict, total=False):
     """Represents a CLI subcommand."""
-    name: str
+    command: str
+    help_text: Optional[str]
     description: Optional[str]
-    parameters: List[Parameter]
+    parameters: Optional[List[Parameter]]
     usage: Optional[str]
 
 class ToolInfo(TypedDict, total=False):
@@ -51,6 +58,7 @@ class ToolInfo(TypedDict, total=False):
     global_parameters: List[Parameter]  # parameters that apply to all subcommands
     help_text: Optional[str]
     version_text: Optional[str]
+    containers: Optional[ContainerInfo]
     error: Optional[str]
 
 class WorkflowState(MessagesState):
@@ -62,17 +70,14 @@ class WorkflowState(MessagesState):
     # Invocation agent outputs
     tool_info: Optional[ToolInfo]
     
-    # Parsing agent outputs  
-    parsed_subcommands: Optional[List[Subcommand]]
-    
     # Standardization agent outputs
     standardized_tools: Optional[List[StandardizedTool]]
-    standardized_parameters: Optional[List[Parameter]]
     
     # Troubleshooting agent outputs
     validation_errors: Optional[List[str]]
     suggested_fixes: Optional[List[str]]
     
     # Generator agent outputs
-    generated_workflow: Optional[str]
-    workflow_metadata: Optional[Dict[str, Any]]
+    generated_nextflow: Optional[str]
+    generated_wdl: Optional[str]
+    metadata: Optional[Dict[str, Any]]
