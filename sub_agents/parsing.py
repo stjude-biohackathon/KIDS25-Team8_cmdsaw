@@ -12,17 +12,111 @@ from langchain_ollama import ChatOllama
 from sub_agents.schema import WorkflowState, ToolInfo, Subcommand, Parameter
 
 
-def extract_version_from_text(version_text: str) -> str:
-    """Extract clean version number from version text."""
-    if not version_text:
-        return None
+def parse_version(version_string: str) -> str:
+    """
+    Extract numeric version from a version string.
     
-    # Look for version patterns like "1.22.1", "v1.22.1", etc.
-    version_match = re.search(r'v?(\d+\.\d+(?:\.\d+)?)', version_text)
-    if version_match:
-        return version_match.group(1)
+    Strips common prefixes and extracts the version number pattern.
+    Keeps semantic versioning including pre-release identifiers.
     
-    return None
+    Args:
+        version_string: Raw version string from command output
+        
+    Returns:
+        Cleaned version string with just numeric components
+        
+    Examples:
+        >>> parse_version("v0.1.8")
+        '0.1.8'
+        >>> parse_version("running 9.2")
+        '9.2'
+        >>> parse_version("version: 1.8.4-a")
+        '1.8.4-a'
+        >>> parse_version("toastbox version 2.4.1")
+        '2.4.1'
+        >>> parse_version("Version 3.2.1-beta.1+build.123")
+        '3.2.1-beta.1+build.123'
+    """
+    if not version_string:
+        return ""
+    
+    # Pattern explanation:
+    # \d+ - one or more digits (major version)
+    # (?:\.\d+)* - zero or more groups of dot followed by digits (minor, patch, etc.)
+    # (?:[-+][a-zA-Z0-9.]+)* - zero or more pre-release or build metadata segments
+    pattern = r'\d+(?:\.\d+)*(?:[-+][a-zA-Z0-9.]+)*'
+    
+    match = re.search(pattern, version_string)
+    if match:
+        return match.group(0)
+    
+    # If no match found, return cleaned string (strip whitespace)
+    return version_string.strip()
+
+
+# Test cases
+# if __name__ == "__main__":
+#     test_cases = [
+#         ("""v0.1.8 rahblah blah
+#         toast is oh so tasty, yes
+#         """, "0.1.8"),
+#         ("running 9.2", "9.2"),
+#         ("version: 1.8.4-a", "1.8.4-a"),
+#         ("toastbox version 2.4.1", "2.4.1"),
+#         ("Version 3.2.1", "3.2.1"),
+#         ("v1.2.3-beta.1+build.123", "1.2.3-beta.1+build.123"),
+#         ("Git version 2.39.1", "2.39.1"),
+#         ("docker 24.0.5", "24.0.5"),
+#         ("Python 3.11.4", "3.11.4"),
+#         ("v10.0.0-rc.1", "10.0.0-rc.1"),
+#         ("1.0", "1.0"),
+#         ("5", "5"),
+#     ]
+    
+#     print("Testing version parser:")
+#     print("-" * 60)
+#     for input_str, expected in test_cases:
+#         result = parse_version(input_str)
+#         status = "✓" if result == expected else "✗"
+#         print(f"{status} parse_version('{input_str}')")
+#         print(f"  Expected: '{expected}'")
+#         print(f"  Got:      '{result}'")
+#         if result != expected:
+#             print("  FAILED!")
+#         print()
+
+
+def parsing_version_agent(state: WorkflowState) -> Dict[str, Any]:
+    """
+    Parsing agent: Uses LLM to parse help text and extract detailed parameter information.
+    Takes the raw help/version text from invocation agent and produces structured subcommands and parameters.
+    """
+    tool_info = state.get("tool_info")
+    if not tool_info:
+        raise Exception("Tool info missing from state")
+    
+    if tool_info.get("error"):
+        # Pass through error state
+        return {"tool_info": tool_info}
+    
+    version_text = tool_info.get("version_text")
+    
+    if version_text:
+        clean_version = parse_version(version_text)
+        
+        # Update tool_info with parsed results
+        tool_info: ToolInfo = {
+            **tool_info,
+            "version": clean_version,
+        }
+
+        print(f"Extracted {clean_version} as version")
+    else:
+        print("No version_text found, skipping version extraction")
+    
+    return {
+        "tool_info": tool_info
+    }
 
 
 def parsing_agent(state: WorkflowState) -> Dict[str, Any]:
@@ -39,7 +133,6 @@ def parsing_agent(state: WorkflowState) -> Dict[str, Any]:
         return {"tool_info": tool_info}
     
     help_text = tool_info.get("help_text")
-    version_text = tool_info.get("version_text")
     executable = tool_info.get("tool")
     
     if not help_text:
@@ -73,7 +166,6 @@ Rules:
     # Example JSON format
     example_json = {
         "tool": "samtools",
-        "version": "1.22.1", 
         "description": "Tools for manipulating SAM/BAM/CRAM files",
         "subcommands": [
             {
@@ -95,10 +187,7 @@ Rules:
     human_msg = HumanMessage(content=f"""
 Tool: {executable}
 
-Parse the below version help text and extract detailed parameter information for each subcommand. Strictly generate the json in the below format.
-
---version output:
-{version_text}
+Parse the below help ouput and extract detailed parameter information for each subcommand. Strictly generate the json in the below format.
 
 --help output:
 {help_text}
@@ -152,17 +241,10 @@ DO NOT GENERATE ANY EXTRA or ADDITIONAL TEXT
             raw_response = re.sub('```json', '', raw_response)
             raw_response = re.sub('```', '', raw_response).strip()
             parsed = json.loads(raw_response)
-            
-        # Clean up version if needed
-        if parsed.get("version") and version_text:
-            clean_version = extract_version_from_text(version_text)
-            if clean_version:
-                parsed["version"] = clean_version
         
         # Update tool_info with parsed results
         updated_tool_info: ToolInfo = {
             **tool_info,
-            "version": parsed.get("version"),
             "description": parsed.get("description"),
             "subcommands": parsed.get("subcommands", []),
             "global_parameters": parsed.get("global_parameters", [])
