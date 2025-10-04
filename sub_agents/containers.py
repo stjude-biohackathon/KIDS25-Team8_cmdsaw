@@ -1,4 +1,8 @@
-def request(executable: str, version: str) -> dict:
+import requests
+from schema import WorkflowState, ToolInfo, ContainerInfo
+from typing import Dict, Any
+
+def request_biocontainers(executable: str, version: str) -> dict:
     """Make request to BioContainers given an executable (tool name) and version."""
     url = f"https://api.biocontainers.pro/ga4gh/trs/v2/tools/{executable}/versions/{executable}-{version}"
     # Example: https://api.biocontainers.pro/ga4gh/trs/v2/tools/samtools/versions/samtools-1.19
@@ -9,7 +13,6 @@ def request(executable: str, version: str) -> dict:
         if r.status_code == 200:
             data = r.json()
 
-            # Initialize variables to hold image names
             bioconda = docker = singularity = None
             images = data.get("images", [])
             # Loop through images and assign image name based on type
@@ -20,7 +23,6 @@ def request(executable: str, version: str) -> dict:
                     docker = x.get("image_name")
                 elif x.get("image_type", "").lower() == "singularity":
                     singularity = x.get("image_name")
-            # Return parsed fields (and full API response if included)
             return {
                 "bioconda": bioconda,
                 "docker": docker,
@@ -61,14 +63,14 @@ def container_agent(state: WorkflowState) -> Dict[str, Any]:
     
     try:
         # Capture container info
-        cli_output = request(executable, version)
-        print(cli_output)
+        container_info = request_biocontainers(executable, version)
+        print(container_info)
 
         # Create basic container info with raw text
         containers: ContainerInfo = {
-            "bioconda": cli_output.get("bioconda"),
-            "docker": cli_output.get("docker"),
-            "singularity": cli_output.get("singularity")
+            "bioconda": container_info.get("bioconda"),
+            "docker": container_info.get("docker"),
+            "singularity": container_info.get("singularity")
         }
 
         # Update tool_info with parsed results
