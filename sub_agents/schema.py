@@ -1,16 +1,22 @@
-from langgraph.graph import MessagesState
-from typing import Dict, List, Any, Optional
+from typing import List, Optional, Dict, Any
 from typing_extensions import TypedDict
+from langgraph.graph import MessagesState
 
 class Parameter(TypedDict, total=False):
     """Represents a CLI parameter."""
-    name: str
-    description: Optional[str]
-    type: str  # string, int, double, path, flag, etc.
-    required: bool
+    description: Optional[str] # description of the parameter, if provided
+    type: Optional[str]  # str, int, float, path, bool, etc.
+    required: bool  # true if required, false if optional
+    is_input: bool  # true if input file or directory
+    is_output: bool # true if output file or directory
     default_value: Optional[str]
-    is_flag: bool
-    aliases: List[str]  # alternative names like -h, --help
+    is_flag: bool # true if flag (no argument), false if takes argument
+    short: str  # short name like -h
+    long: Optional[str]   # long name like --help
+
+class GlobalParameters(TypedDict, total=False):
+    """Names of tool (sub)commands."""
+    parameters: Optional[List[Parameter]]
 
 class ContainerInfo(TypedDict, total=False):
     """Container image information for a tool from BioContainers."""
@@ -43,11 +49,14 @@ class StandardizedTool(TypedDict, total=False):
 
 class Subcommand(TypedDict, total=False):
     """Represents a CLI subcommand."""
-    command: str
-    help_text: Optional[str]
+    name: str
     description: Optional[str]
     parameters: Optional[List[Parameter]]
     usage: Optional[str]
+    
+class SubcommandNames(TypedDict, total=False):
+    """Names of tool (sub)commands."""
+    names: Optional[List[str]]
 
 class ToolInfo(TypedDict, total=False):
     """Represents information about a CLI tool."""
@@ -55,14 +64,14 @@ class ToolInfo(TypedDict, total=False):
     version: Optional[str] 
     description: Optional[str]
     subcommands: List[Subcommand]
-    global_parameters: List[Parameter]  # parameters that apply to all subcommands
+    global_parameters: Optional[GlobalParameters]  # parameters that apply to all subcommands
     help_text: Optional[str]
     version_text: Optional[str]
     containers: Optional[ContainerInfo]
     error: Optional[str]
 
 class WorkflowState(MessagesState):
-    """State passed between agents in the flowgen workflow."""
+    """State passed between agents in the cmdsaw workflow."""
     # Input
     executable: Optional[str]
     target_format: Optional[str]  # 'wdl' or 'nextflow'
@@ -70,8 +79,12 @@ class WorkflowState(MessagesState):
     # Invocation agent outputs
     tool_info: Optional[ToolInfo]
     
+    # Parsing agent outputs  
+    parsed_subcommands: Optional[List[Subcommand]]
+    
     # Standardization agent outputs
     standardized_tools: Optional[List[StandardizedTool]]
+    standardized_parameters: Optional[List[Parameter]]
     
     # Troubleshooting agent outputs
     validation_errors: Optional[List[str]]
