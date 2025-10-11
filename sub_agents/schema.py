@@ -224,10 +224,6 @@ class WorkflowState(MessagesState):
         None, 
         description="Tools standardized with EDAM ontology terms for workflow generation"
     )
-    standardized_parameters: Optional[List[Parameter]] = Field(
-        None, 
-        description="Parameters standardized for workflow compatibility"
-    )
     
     # Troubleshooting agent outputs
     validation_errors: Optional[List[str]] = Field(

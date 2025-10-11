@@ -190,12 +190,12 @@ Example output for rahblah help text:
     # Human input
     human_msg = HumanMessage(content=f"""
 Parse the below help ouput and extract the name of any subcommands.
+DO NOT GENERATE ANY EXTRA or ADDITIONAL TEXT.
 
 --help output:
 {help_text}
 
 
-DO NOT GENERATE ANY EXTRA or ADDITIONAL TEXT
 """)
     
     llm = init_chat_model("llama3.2:3b", model_provider="ollama")
