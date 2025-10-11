@@ -5,7 +5,6 @@ from typing import Dict, Any
 def request_biocontainers(executable: str, version: str) -> dict:
     """Make request to BioContainers given an executable (tool name) and version."""
     url = f"https://api.biocontainers.pro/ga4gh/trs/v2/tools/{executable}/versions/{executable}-{version}"
-    # Example: https://api.biocontainers.pro/ga4gh/trs/v2/tools/samtools/versions/samtools-1.19
     print(f"Running request for {executable}-{version}")
     
     try:

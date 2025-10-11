@@ -2,7 +2,6 @@ import re
 from typing import Dict, Any, List
 from langgraph.graph import START, StateGraph, END
 from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_ollama import ChatOllama
 from sub_agents.schema import WorkflowState, ToolInfo, Subcommand, Parameter
 
 
@@ -82,8 +81,7 @@ def parse_version(version_string: str) -> str:
 
 def parsing_version_agent(state: WorkflowState) -> Dict[str, Any]:
     """
-    Parsing agent: Uses LLM to parse help text and extract detailed parameter information.
-    Takes the raw help/version text from invocation agent and produces structured subcommands and parameters.
+    Takes the raw version text from invocation agent and produces structured subcommands and parameters.
     """
     tool_info = state.get("tool_info")
     if not tool_info:
