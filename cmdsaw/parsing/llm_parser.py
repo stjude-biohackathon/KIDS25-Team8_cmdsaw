@@ -6,9 +6,39 @@ from .prompts import SYSTEM_PROMPT, FEWSHOT
 from langchain_ollama import ChatOllama
 
 def _build_model(model_name: str, temperature: float = 0.0) -> ChatOllama:
+    """
+    Create a ChatOllama model instance for LLM parsing.
+
+    :param model_name: Name of the Ollama model to use
+    :type model_name: str
+    :param temperature: Sampling temperature (0.0 for deterministic)
+    :type temperature: float
+    :return: Configured ChatOllama instance
+    :rtype: ChatOllama
+    """
     return ChatOllama(model=model_name, temperature=temperature)
 
 def parse_command_help(*, model_name: str, command_path: str, help_text: str, retries: int = 2, cache_getset: Optional[Tuple] = None) -> CommandDoc:
+    """
+    Parse command help text using an LLM to extract structured documentation.
+
+    Uses few-shot prompting with an Ollama model to convert raw help text
+    into a structured CommandDoc. Supports caching and retry logic for
+    validation errors.
+
+    :param model_name: Name of the Ollama model to use for parsing
+    :type model_name: str
+    :param command_path: Full command path (e.g., "samtools view")
+    :type command_path: str
+    :param help_text: Raw help text output from the command
+    :type help_text: str
+    :param retries: Number of retry attempts on validation failure
+    :type retries: int
+    :param cache_getset: Optional tuple of (get_func, set_func) for caching
+    :type cache_getset: Optional[Tuple]
+    :return: Parsed command documentation
+    :rtype: CommandDoc
+    """
     cache_get, cache_set = (cache_getset or (None, None))
     if cache_get:
         cached = cache_get(command_path, None, model_name, help_text)

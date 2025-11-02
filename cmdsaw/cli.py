@@ -18,6 +18,38 @@ from .wdl import emit_wdl
 @click.option("--env", multiple=True, help="Extra env vars: KEY=VAL", metavar="KEY=VAL")
 @click.option("--no-llm-cache", is_flag=True, default=False, help="Disable on-disk LLM parse cache")
 def main(command, model, output, wdl_out, timeout, max_depth, concurrency, help_flags, workdir, env, no_llm_cache):
+    """
+    Parse CLI help text using LLM and emit structured documentation.
+
+    Main entry point for the cmdsaw CLI tool. Parses a command's help text
+    recursively for all subcommands using an LLM, then outputs structured JSON
+    and optionally WDL task definitions.
+
+    :param command: Root command to inspect (e.g., 'samtools')
+    :type command: str
+    :param model: Ollama model name to use for parsing
+    :type model: str
+    :param output: Optional file path to write JSON output
+    :type output: str | None
+    :param wdl_out: Optional file path to write WDL task definitions
+    :type wdl_out: str | None
+    :param timeout: Per-invocation timeout in seconds
+    :type timeout: int
+    :param max_depth: Maximum subcommand recursion depth
+    :type max_depth: int
+    :param concurrency: Maximum parallel subcommand parses
+    :type concurrency: int
+    :param help_flags: Space-separated help flags to try
+    :type help_flags: str
+    :param workdir: Optional working directory for command execution
+    :type workdir: str | None
+    :param env: Tuple of KEY=VAL environment variable strings
+    :type env: tuple[str, ...]
+    :param no_llm_cache: Whether to disable LLM parse cache
+    :type no_llm_cache: bool
+    :return: None
+    :rtype: None
+    """
     env_map = {}
     for kv in env:
         if "=" in kv:

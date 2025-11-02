@@ -16,6 +16,20 @@ Rules:
 """
 
 def estimate_resources(doc: CommandDoc, model_name: str) -> ResourceEstimate:
+    """
+    Estimate CPU and memory requirements for a command using an LLM.
+
+    Analyzes the command's help text and purpose to provide conservative
+    resource estimates. Falls back to default values (1 CPU, 2GB RAM) on
+    parsing failure.
+
+    :param doc: Command documentation with help text
+    :type doc: CommandDoc
+    :param model_name: Ollama model name to use for estimation
+    :type model_name: str
+    :return: Resource estimate with CPU cores and memory in GB
+    :rtype: ResourceEstimate
+    """
     model = ChatOllama(model=model_name, temperature=0.0)
     structured = model.with_structured_output(ResourceEstimate)
     user = f"command_path: {doc.path}\n\nhelp_text:\n{doc.help_text}\n"
