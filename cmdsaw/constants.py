@@ -1,0 +1,7 @@
+HELP_FLAG_CANDIDATES: tuple[str, ...] = ("--help", "-h")
+VERSION_FLAG_CANDIDATES: tuple[str, ...] = ("--version", "-v")
+SCHEMA_VERSION = "1.0"
+DEFAULT_TIMEOUT = 20
+DEFAULT_MAX_DEPTH = 3
+DEFAULT_CONCURRENCY = 4
+DEFAULT_MODEL = "llama3.2"
