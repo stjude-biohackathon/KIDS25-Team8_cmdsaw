@@ -20,6 +20,33 @@ def build_tree(
     concurrency: int = DEFAULT_CONCURRENCY,
     use_cache: bool = True,
 ) -> Tuple[CmdSawResult, List[CommandDoc]]:
+    """
+    Build a complete documentation tree for a command and its subcommands.
+
+    Recursively discovers and parses help text for a root command and all its
+    subcommands using an LLM. Supports concurrent parsing and result caching.
+
+    :param root_cmd: Name of the root command to inspect
+    :type root_cmd: str
+    :param model_name: Ollama model name to use for parsing
+    :type model_name: str
+    :param timeout: Per-invocation timeout in seconds
+    :type timeout: int
+    :param max_depth: Maximum recursion depth for subcommands
+    :type max_depth: int
+    :param env: Optional environment variables for command execution
+    :type env: Optional[Mapping[str,str]]
+    :param cwd: Optional working directory for command execution
+    :type cwd: Optional[str]
+    :param help_flags: Tuple of help flags to try in order
+    :type help_flags: tuple[str,...]
+    :param concurrency: Maximum number of parallel subcommand parses
+    :type concurrency: int
+    :param use_cache: Whether to use on-disk LLM parse cache
+    :type use_cache: bool
+    :return: Tuple of (complete result, list of all command docs)
+    :rtype: Tuple[CmdSawResult, List[CommandDoc]]
+    """
     bin_path = which_or_raise(root_cmd)
     diagnostics = ParseDiagnostics()
     cache = ParseCache() if use_cache else None

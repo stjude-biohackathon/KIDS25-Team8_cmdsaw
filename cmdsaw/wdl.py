@@ -5,12 +5,34 @@ from .parsing.schema import CommandDoc, OptionDoc, PositionalDoc
 from .parsing.resource_estimator import estimate_resources, ResourceEstimate
 
 def _sanitize_task_name(path: str) -> str:
+    """
+    Convert a command path to a valid WDL task name.
+
+    Replaces spaces and non-alphanumeric characters with underscores, and
+    ensures the name starts with a letter.
+
+    :param path: Command path (e.g., "samtools view")
+    :type path: str
+    :return: Sanitized task name suitable for WDL
+    :rtype: str
+    """
     s = re.sub(r"[^A-Za-z0-9_]+", "_", path.strip().replace(" ", "_"))
     if not s or not s[0].isalpha():
         s = f"t_{s}"
     return s
 
 def _sanitize_var_name(name: str) -> str:
+    """
+    Convert an option name to a valid WDL variable name.
+
+    Removes dashes, converts to lowercase, replaces special characters with
+    underscores, and ensures the name starts with a letter.
+
+    :param name: Option name (e.g., "--output-file" or "-o")
+    :type name: str
+    :return: Sanitized variable name suitable for WDL
+    :rtype: str
+    """
     s = name.lower()
     s = s.replace("--", "").replace("-", "_")
     s = re.sub(r"[^A-Za-z0-9_]", "_", s)
@@ -19,6 +41,21 @@ def _sanitize_var_name(name: str) -> str:
     return s
 
 def _wdl_type(opt_type: str, is_flag: bool, repeatable: bool) -> str:
+    """
+    Map a cmdsaw type to a WDL type.
+
+    Converts internal parameter types to WDL types. Flags always become Boolean,
+    and repeatable non-flag options become arrays.
+
+    :param opt_type: Internal type (e.g., "int", "float", "str", "path")
+    :type opt_type: str
+    :param is_flag: Whether the option is a boolean flag
+    :type is_flag: bool
+    :param repeatable: Whether the option can be specified multiple times
+    :type repeatable: bool
+    :return: WDL type string (e.g., "Int", "Boolean", "Array[String]")
+    :rtype: str
+    """
     if is_flag:
         return "Boolean"
     mapping = {
@@ -34,6 +71,19 @@ def _wdl_type(opt_type: str, is_flag: bool, repeatable: bool) -> str:
     return f"Array[{base}]" if repeatable and not is_flag else base
 
 def _default_literal(wdl_t: str, default: str | None):
+    """
+    Convert a default value to a WDL literal.
+
+    Formats default values according to their WDL type. Returns None if the
+    default cannot be converted or is not provided.
+
+    :param wdl_t: WDL type string (e.g., "Int", "Float", "Boolean", "String")
+    :type wdl_t: str
+    :param default: Default value as a string, or None
+    :type default: str | None
+    :return: WDL literal string, or None if conversion fails
+    :rtype: str | None
+    """
     if default is None:
         return None
     try:
@@ -54,9 +104,32 @@ def _default_literal(wdl_t: str, default: str | None):
     return f"\"{s}\""
 
 def _flag_token(opt: OptionDoc) -> str:
+    """
+    Get the command-line flag string for an option.
+
+    Returns the long form if available, otherwise the short form.
+
+    :param opt: Option documentation object
+    :type opt: OptionDoc
+    :return: Flag string (e.g., "--output" or "-o")
+    :rtype: str
+    """
     return opt.long or opt.short or ""
 
 def _option_command_fragment(var: str, opt: OptionDoc) -> str:
+    """
+    Generate WDL command fragment for an option.
+
+    Creates a WDL placeholder expression that conditionally includes the option
+    in the command line based on whether it is defined or set.
+
+    :param var: WDL variable name
+    :type var: str
+    :param opt: Option documentation object
+    :type opt: OptionDoc
+    :return: WDL command fragment string
+    :rtype: str
+    """
     flag = _flag_token(opt)
     if opt.is_flag:
         return f'~{{if {var} then "{flag}" else ""}}'
@@ -66,6 +139,20 @@ def _option_command_fragment(var: str, opt: OptionDoc) -> str:
     return f'~{{if defined({var}) then "{flag} " + {var} else ""}}'
 
 def _inputs_block(cmd: CommandDoc, est: ResourceEstimate) -> tuple[str, list[str]]:
+    """
+    Generate WDL input block and parameter metadata.
+
+    Creates input declarations for all options and positionals, including
+    resource estimates (CPU and memory). Also generates metadata strings
+    for parameter documentation.
+
+    :param cmd: Command documentation object
+    :type cmd: CommandDoc
+    :param est: Resource estimate for the command
+    :type est: ResourceEstimate
+    :return: Tuple of (input block string, list of metadata strings)
+    :rtype: tuple[str, list[str]]
+    """
     lines: list[str] = []
     metas: list[str] = []
     lines.extend([
@@ -96,6 +183,17 @@ def _inputs_block(cmd: CommandDoc, est: ResourceEstimate) -> tuple[str, list[str
     return "\n  ".join(lines), metas
 
 def _command_block(cmd: CommandDoc) -> str:
+    """
+    Generate WDL command block for a command.
+
+    Constructs the command line with all options and positional arguments
+    using WDL placeholder syntax.
+
+    :param cmd: Command documentation object
+    :type cmd: CommandDoc
+    :return: WDL command block string
+    :rtype: str
+    """
     parts: list[str] = [cmd.path]
     for opt in cmd.options:
         var = _sanitize_var_name(opt.long or opt.short or "opt")
@@ -109,6 +207,19 @@ def _command_block(cmd: CommandDoc) -> str:
     return " \\\n    ".join(parts)
 
 def _task_for(doc: CommandDoc, model_name: str) -> str:
+    """
+    Generate a complete WDL task definition for a command.
+
+    Creates a WDL 1.2 task with input declarations, command block,
+    runtime requirements, and parameter metadata.
+
+    :param doc: Command documentation object
+    :type doc: CommandDoc
+    :param model_name: Ollama model name for resource estimation
+    :type model_name: str
+    :return: Complete WDL task definition as a string
+    :rtype: str
+    """
     tname = _sanitize_task_name(doc.path)
     est = estimate_resources(doc, model_name=model_name)
     inputs, metas = _inputs_block(doc, est)
@@ -133,6 +244,23 @@ def _task_for(doc: CommandDoc, model_name: str) -> str:
 }}"""
 
 def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_name: str) -> None:
+    """
+    Write WDL task definitions for all commands to a file.
+
+    Generates WDL 1.2 tasks for each command and subcommand, handling
+    name collisions by appending numeric suffixes.
+
+    :param tool_name: Name of the root tool (unused but kept for API compatibility)
+    :type tool_name: str
+    :param docs: List of command documentation objects
+    :type docs: List[CommandDoc]
+    :param out_path: File path where WDL will be written
+    :type out_path: str
+    :param model_name: Ollama model name for resource estimation
+    :type model_name: str
+    :return: None
+    :rtype: None
+    """
     header = 'version 1.2'
     seen = set()
     tasks = []
