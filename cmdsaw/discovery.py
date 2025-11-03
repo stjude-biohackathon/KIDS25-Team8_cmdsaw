@@ -8,16 +8,23 @@ from .constants import DEFAULT_TIMEOUT, DEFAULT_MAX_DEPTH, DEFAULT_CONCURRENCY, 
 from .runner import try_help, try_version, now_iso
 from .utils import which_or_raise
 
-def _review_subcommands(discovered: List[str], root_cmd: str) -> List[str]:
+def _review_subcommands(discovered: List[str], root_cmd: str, help_text: str = None, model_name: str = None, cache_getset: tuple = None) -> List[str]:
     """
     Interactive review of discovered subcommands.
     
-    Allows user to confirm, add missing, or remove extraneous subcommands.
+    Allows user to confirm, add missing, remove extraneous subcommands, or
+    re-parse with LLM using an emphasized prompt for better subcommand detection.
     
     :param discovered: List of discovered subcommand names
     :type discovered: List[str]
     :param root_cmd: Root command name
     :type root_cmd: str
+    :param help_text: Original help text for re-parsing
+    :type help_text: str
+    :param model_name: LLM model name for re-parsing
+    :type model_name: str
+    :param cache_getset: Cache functions tuple for re-parsing
+    :type cache_getset: tuple
     :return: Reviewed and modified list of subcommands
     :rtype: List[str]
     """
@@ -33,9 +40,12 @@ def _review_subcommands(discovered: List[str], root_cmd: str) -> List[str]:
     print(f"  [a] Add missing subcommands")
     print(f"  [r] Remove extraneous subcommands")
     print(f"  [e] Edit the full list manually")
+    if help_text and model_name:
+        print(f"  [p] Re-parse with LLM (emphasize subcommand discovery)")
     
     while True:
-        choice = input(f"\nYour choice [c/a/r/e]: ").strip().lower()
+        prompt_choices = "c/a/r/e/p" if help_text and model_name else "c/a/r/e"
+        choice = input(f"\nYour choice [{prompt_choices}]: ").strip().lower()
         
         if choice == 'c':
             print(f"Confirmed. Proceeding with {len(discovered)} subcommand(s).")
@@ -81,8 +91,38 @@ def _review_subcommands(discovered: List[str], root_cmd: str) -> List[str]:
             else:
                 print("No changes made.")
         
+        elif choice == 'p':
+            if not help_text or not model_name:
+                print(f"Re-parsing not available (missing help text or model name).")
+                continue
+            
+            print(f"\nRe-parsing with LLM using emphasized prompt for subcommand discovery...")
+            print(f"This will invoke the model again with special emphasis on finding ALL subcommands.")
+            
+            # Import here to avoid circular dependency
+            from .parsing.llm_parser import parse_command_help_with_emphasis
+            
+            try:
+                reparsed_doc = parse_command_help_with_emphasis(
+                    model_name=model_name,
+                    command_path=root_cmd,
+                    help_text=help_text,
+                    retries=2,
+                    cache_getset=None,  # Don't use cache for emphasized re-parse
+                )
+                
+                if reparsed_doc.subcommands:
+                    discovered = list(reparsed_doc.subcommands)
+                    print(f"Re-parsing complete. Found {len(discovered)} subcommand(s): {', '.join(discovered)}")
+                else:
+                    print(f"Re-parsing complete. No subcommands found.")
+            except Exception as e:
+                print(f"Re-parsing failed: {e}")
+                print(f"Keeping original list.")
+        
         else:
-            print(f"Invalid choice. Please enter c, a, r, or e.")
+            valid_choices = "c, a, r, e, p" if help_text and model_name else "c, a, r, or e"
+            print(f"Invalid choice. Please enter {valid_choices}.")
     
     return discovered
 
@@ -161,7 +201,13 @@ def build_tree(
         print("No subcommands discovered in root")
     
     if review_subcommands:
-        subcommands_to_process = _review_subcommands(subcommands_to_process, root_cmd)
+        subcommands_to_process = _review_subcommands(
+            subcommands_to_process, 
+            root_cmd,
+            help_text=help_text,
+            model_name=model_name,
+            cache_getset=cache_getset
+        )
     
     queue: List[tuple[str,int]] = [(name, 1) for name in subcommands_to_process]
 
