@@ -92,5 +92,3 @@ def main(command, model, output, wdl_out, timeout, max_depth, concurrency, help_
         click.echo(f"Generating WDL tasks to: {wdl_out}")
         emit_wdl(tool_name=command, docs=all_docs, out_path=wdl_out, model_name=model)
 
-    click.echo("\nJSON output:")
-    click.echo(to_json(result))
