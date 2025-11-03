@@ -50,7 +50,6 @@ def build_tree(
     print(f"Resolving command path for: {root_cmd}")
     bin_path = which_or_raise(root_cmd)
     print(f"  Resolved to: {bin_path}")
-    
     diagnostics = ParseDiagnostics()
     cache = ParseCache() if use_cache else None
     cache_getset = (cache.get, cache.set) if cache else None
@@ -73,7 +72,6 @@ def build_tree(
     )
     visited: Set[str] = set([root_doc.path])
     queue: List[tuple[str,int]] = [(name, 1) for name in root_doc.subcommands]
-    
     if root_doc.subcommands:
         print(f"Discovered {len(root_doc.subcommands)} subcommand(s) in root: {', '.join(root_doc.subcommands)}")
     else:

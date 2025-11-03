@@ -53,7 +53,6 @@ def main(command, model, output, wdl_out, timeout, max_depth, concurrency, help_
     click.echo(f"Starting cmdsaw for command: {command}")
     click.echo(f"Using model: {model}")
     click.echo(f"Max depth: {max_depth}, Concurrency: {concurrency}")
-    
     env_map = {}
     for kv in env:
         if "=" in kv:
