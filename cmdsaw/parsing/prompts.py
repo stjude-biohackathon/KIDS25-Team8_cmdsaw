@@ -9,7 +9,7 @@ Rules:
 - Positionals ordered from USAGE or headings. Index 0-based.
 - Subcommands list immediate child names only.
 - Repeatable if stated or shown with '...'.
-- Set requires_subcommand to true if the command is meaningless without a subcommand (e.g., usage shows "command [subcommand]" and no standalone functionality).
+- Set requires_subcommand to True if the command is meaningless without a subcommand (e.g., usage shows "command [subcommand]" and no standalone functionality).
 
 Return only JSON.
 """
@@ -24,7 +24,7 @@ Rules:
 - Choices from braces or clear prose.
 - Positionals ordered from USAGE or headings. Index 0-based.
 - Repeatable if stated or shown with '...'.
-- Set requires_subcommand to true if the command is meaningless without a subcommand (e.g., usage shows "command [subcommand]" and no standalone functionality).
+- Set requires_subcommand to True if the command is meaningless without a subcommand (e.g., usage shows "command [subcommand]" and no standalone functionality).
 
 **CRITICAL: SUBCOMMAND DISCOVERY**
 PAY SPECIAL ATTENTION to discovering ALL available subcommands. This is the MOST IMPORTANT part of your task.
@@ -59,7 +59,7 @@ FEWSHOT = [
                 {"name":"OUTPUT","index":1,"variadic":False,"required":False,"type":"path","description":"Destination path"}
             ],
             "subcommands": [],
-            "requires_subcommand": false
+            "requires_subcommand": False
         }
     },
     {
@@ -75,7 +75,7 @@ FEWSHOT = [
             ],
             "positionals": [],
             "subcommands": ["pull","push","info"],
-            "requires_subcommand": true
+            "requires_subcommand": True
         }
     }
 ]

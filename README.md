@@ -42,17 +42,17 @@ ollama serve
 
 Based on our testing, the best performing models for CLI help parsing are:
 
-- **`gemma2:12b`** - Excellent balance of speed and accuracy
+- **`gemma3:12b`** - Excellent balance of speed and accuracy
 - **`deepseek-r1:14b`** - High accuracy, slightly slower
 
 Pull a model before using cmdsaw:
 ```bash
-ollama pull gemma2:12b
+ollama pull gemma3:12b
 # or
 ollama pull deepseek-r1:14b
 ```
 
-Other models like `llama3.2`, `qwen2.5`, and `mistral` also work but may have varying accuracy.
+Other models like `llama3.2`, `qwen3`, and `mistral` also work but may have varying accuracy.
 
 ## Installation
 
