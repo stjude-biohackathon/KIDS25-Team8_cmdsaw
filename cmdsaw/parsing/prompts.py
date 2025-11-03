@@ -9,6 +9,7 @@ Rules:
 - Positionals ordered from USAGE or headings. Index 0-based.
 - Subcommands list immediate child names only.
 - Repeatable if stated or shown with '...'.
+- Set requires_subcommand to true if the command is meaningless without a subcommand (e.g., usage shows "command [subcommand]" and no standalone functionality).
 
 Return only JSON.
 """
@@ -23,6 +24,7 @@ Rules:
 - Choices from braces or clear prose.
 - Positionals ordered from USAGE or headings. Index 0-based.
 - Repeatable if stated or shown with '...'.
+- Set requires_subcommand to true if the command is meaningless without a subcommand (e.g., usage shows "command [subcommand]" and no standalone functionality).
 
 **CRITICAL: SUBCOMMAND DISCOVERY**
 PAY SPECIAL ATTENTION to discovering ALL available subcommands. This is the MOST IMPORTANT part of your task.
@@ -56,7 +58,8 @@ FEWSHOT = [
                 {"name":"INPUT","index":0,"variadic":False,"required":True,"type":"path","description":"Source file path"},
                 {"name":"OUTPUT","index":1,"variadic":False,"required":False,"type":"path","description":"Destination path"}
             ],
-            "subcommands": []
+            "subcommands": [],
+            "requires_subcommand": false
         }
     },
     {
@@ -71,7 +74,8 @@ FEWSHOT = [
                 {"long":"--profile","short":None,"is_flag":False,"type":"str","choices":None,"required":False,"default":None,"description":"Profile name","repeatable":False,"envvar":None,"aliases":[]}
             ],
             "positionals": [],
-            "subcommands": ["pull","push","info"]
+            "subcommands": ["pull","push","info"],
+            "requires_subcommand": true
         }
     }
 ]
