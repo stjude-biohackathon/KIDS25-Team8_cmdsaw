@@ -261,6 +261,7 @@ def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_nam
     :return: None
     :rtype: None
     """
+    print(f"\nGenerating WDL 1.2 tasks for {len(docs)} command(s)...")
     header = 'version 1.2'
     seen = set()
     tasks = []
@@ -272,9 +273,12 @@ def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_nam
             while f"{name}_{idx}" in seen:
                 idx += 1
             t = t.replace(f"task {name} ", f"task {name}_{idx} ")
+            print(f"  Generated WDL task: {name}_{idx} (renamed due to collision)")
             seen.add(f"{name}_{idx}")
         else:
+            print(f"  Generated WDL task: {name}")
             seen.add(name)
         tasks.append(t)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(header + "\n\n" + "\n\n".join(tasks) + "\n")
+    print(f"WDL tasks written to: {out_path}")

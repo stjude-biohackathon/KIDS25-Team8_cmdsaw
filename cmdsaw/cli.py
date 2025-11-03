@@ -50,6 +50,10 @@ def main(command, model, output, wdl_out, timeout, max_depth, concurrency, help_
     :return: None
     :rtype: None
     """
+    click.echo(f"Starting cmdsaw for command: {command}")
+    click.echo(f"Using model: {model}")
+    click.echo(f"Max depth: {max_depth}, Concurrency: {concurrency}")
+    
     env_map = {}
     for kv in env:
         if "=" in kv:
@@ -57,6 +61,7 @@ def main(command, model, output, wdl_out, timeout, max_depth, concurrency, help_
             env_map[k] = v
     flags = tuple(x for x in help_flags.split() if x)
 
+    click.echo(f"Building command tree...")
     result, all_docs = build_tree(
         root_cmd=command,
         model_name=model,
@@ -69,9 +74,20 @@ def main(command, model, output, wdl_out, timeout, max_depth, concurrency, help_
         use_cache=not no_llm_cache,
     )
 
+    click.echo(f"\nFound {len(all_docs)} total commands (including root)")
+    click.echo(f"Found {len(all_docs) - 1} subcommands")
+    
+    if len(all_docs) > 1:
+        click.echo("\nAll discovered subcommands:")
+        for doc in all_docs[1:]:  # Skip root command
+            click.echo(f"  - {doc.path}")
+    
     if output:
+        click.echo(f"\nWriting JSON output to: {output}")
         write_json(output, result)
     if wdl_out:
+        click.echo(f"Generating WDL tasks to: {wdl_out}")
         emit_wdl(tool_name=command, docs=all_docs, out_path=wdl_out, model_name=model)
 
+    click.echo("\nJSON output:")
     click.echo(to_json(result))

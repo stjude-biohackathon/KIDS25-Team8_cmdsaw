@@ -47,15 +47,23 @@ def build_tree(
     :return: Tuple of (complete result, list of all command docs)
     :rtype: Tuple[CmdSawResult, List[CommandDoc]]
     """
+    print(f"Resolving command path for: {root_cmd}")
     bin_path = which_or_raise(root_cmd)
+    print(f"  Resolved to: {bin_path}")
+    
     diagnostics = ParseDiagnostics()
     cache = ParseCache() if use_cache else None
     cache_getset = (cache.get, cache.set) if cache else None
+    if use_cache:
+        print(f"LLM cache enabled at: {cache.root}")
+    else:
+        print("LLM cache disabled")
 
     help_text, _ = try_help([bin_path], help_flags, timeout=timeout, env=env, cwd=cwd)
     version = try_version([bin_path], timeout=timeout, env=env, cwd=cwd)
     diagnostics.version_extracted = bool(version)
 
+    print(f"\nParsing root command with LLM...")
     root_doc: CommandDoc = parse_command_help(
         model_name=model_name,
         command_path=root_cmd,
@@ -65,10 +73,16 @@ def build_tree(
     )
     visited: Set[str] = set([root_doc.path])
     queue: List[tuple[str,int]] = [(name, 1) for name in root_doc.subcommands]
+    
+    if root_doc.subcommands:
+        print(f"Discovered {len(root_doc.subcommands)} subcommand(s) in root: {', '.join(root_doc.subcommands)}")
+    else:
+        print("No subcommands discovered in root")
 
     subdocs: Dict[str, CommandDoc] = {}
 
     def process_one(path: str, depth: int) -> tuple[str, CommandDoc]:
+        print(f"  Processing subcommand: {path} (depth={depth})")
         parts = path.split()
         bin_ = which_or_raise(parts[0])
         help_t, _ = try_help([bin_] + parts[1:], help_flags, timeout=timeout, env=env, cwd=cwd)
@@ -79,8 +93,11 @@ def build_tree(
             retries=2,
             cache_getset=cache_getset,
         )
+        if doc.subcommands:
+            print(f"    Found {len(doc.subcommands)} sub-subcommand(s): {', '.join(doc.subcommands)}")
         return path, doc
 
+    print(f"\nProcessing subcommands (max_depth={max_depth}, concurrency={concurrency})...")
     with ThreadPoolExecutor(max_workers=concurrency) as ex:
         while queue:
             futures = []

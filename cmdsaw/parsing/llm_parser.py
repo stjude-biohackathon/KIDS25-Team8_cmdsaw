@@ -43,8 +43,11 @@ def parse_command_help(*, model_name: str, command_path: str, help_text: str, re
     if cache_get:
         cached = cache_get(command_path, None, model_name, help_text)
         if cached:
+            print(f"  Cache HIT for: {command_path}")
             return CommandDoc.model_validate(cached)
+        print(f"  Cache MISS for: {command_path}")
 
+    print(f"  Parsing with LLM model {model_name}...")
     model = _build_model(model_name)
     structured = model.with_structured_output(CommandDoc)
 
@@ -59,10 +62,14 @@ def parse_command_help(*, model_name: str, command_path: str, help_text: str, re
                 {"role": "system", "content": SYSTEM_PROMPT + fewshot_blob},
                 {"role": "user", "content": user_blob},
             ])
+            print(f"  Successfully parsed: {command_path}")
             if cache_set:
                 cache_set(command_path, None, model_name, help_text, result.model_dump())
+                print(f"  Cached result for: {command_path}")
             return result
-        except ValidationError:
+        except ValidationError as e:
             if attempt >= retries:
+                print(f"  WARNING: Validation failed after {retries} retries for {command_path}, returning empty doc")
                 return CommandDoc(name=command_path.split()[-1], path=command_path, help_text=help_text, options=[], positionals=[], subcommands=[])
+            print(f"  Validation error on attempt {attempt + 1}, retrying...")
             user_blob += "\nReminder: Return ONLY valid JSON matching the CommandDoc schema."
