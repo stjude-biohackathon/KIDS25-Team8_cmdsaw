@@ -164,6 +164,9 @@ def _inputs_block(cmd: CommandDoc, est: ResourceEstimate) -> tuple[str, list[str
         '  "memory_gb": "Estimated RAM in GB"'
     ])
     for opt in cmd.options:
+        # Skip --help and -h options
+        if opt.long == "--help" or opt.short == "-h":
+            continue
         var = _sanitize_var_name(opt.long or opt.short or "opt")
         wtype = _wdl_type(opt.type, opt.is_flag, opt.repeatable)
         optional = "" if opt.required and not opt.is_flag else "?"
@@ -196,6 +199,9 @@ def _command_block(cmd: CommandDoc) -> str:
     """
     parts: list[str] = [cmd.path]
     for opt in cmd.options:
+        # Skip --help and -h options
+        if opt.long == "--help" or opt.short == "-h":
+            continue
         var = _sanitize_var_name(opt.long or opt.short or "opt")
         parts.append(_option_command_fragment(var, opt))
     for pos in sorted(cmd.positionals, key=lambda p: p.index):
@@ -248,7 +254,8 @@ def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_nam
     Write WDL task definitions for all commands to a file.
 
     Generates WDL 1.2 tasks for each command and subcommand, handling
-    name collisions by appending numeric suffixes.
+    name collisions by appending numeric suffixes. Skips commands that
+    require subcommands and have no standalone functionality.
 
     :param tool_name: Name of the root tool (unused but kept for API compatibility)
     :type tool_name: str
@@ -261,10 +268,18 @@ def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_nam
     :return: None
     :rtype: None
     """
+    # Filter out commands that require subcommands
+    valid_docs = [d for d in docs if not d.requires_subcommand]
+    skipped_count = len(docs) - len(valid_docs)
+    
+    if skipped_count > 0:
+        print(f"\nSkipping {skipped_count} command(s) that require subcommands")
+    
+    print(f"\nGenerating WDL 1.2 tasks for {len(valid_docs)} command(s)...")
     header = 'version 1.2'
     seen = set()
     tasks = []
-    for d in docs:
+    for d in valid_docs:
         t = _task_for(d, model_name=model_name)
         name = _sanitize_task_name(d.path)
         if name in seen:
@@ -272,9 +287,12 @@ def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_nam
             while f"{name}_{idx}" in seen:
                 idx += 1
             t = t.replace(f"task {name} ", f"task {name}_{idx} ")
+            print(f"  Generated WDL task: {name}_{idx} (renamed due to collision)")
             seen.add(f"{name}_{idx}")
         else:
+            print(f"  Generated WDL task: {name}")
             seen.add(name)
         tasks.append(t)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(header + "\n\n" + "\n\n".join(tasks) + "\n")
+    print(f"WDL tasks written to: {out_path}")

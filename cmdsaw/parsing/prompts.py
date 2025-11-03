@@ -9,6 +9,32 @@ Rules:
 - Positionals ordered from USAGE or headings. Index 0-based.
 - Subcommands list immediate child names only.
 - Repeatable if stated or shown with '...'.
+- Set requires_subcommand to True if the command is meaningless without a subcommand (e.g., usage shows "command [subcommand]" and no standalone functionality).
+
+Return only JSON.
+"""
+
+EMPHASIZED_SUBCOMMAND_PROMPT = """You convert raw CLI help text into a structured JSON object for one command node.
+
+Rules:
+- Output MUST be valid JSON matching the provided schema.
+- Do not invent items.
+- Types: INT, FLOAT, BOOL, PATH/FILE/DIR -> 'path' or 'str' if unclear.
+- Flags have no value.
+- Choices from braces or clear prose.
+- Positionals ordered from USAGE or headings. Index 0-based.
+- Repeatable if stated or shown with '...'.
+- Set requires_subcommand to True if the command is meaningless without a subcommand (e.g., usage shows "command [subcommand]" and no standalone functionality).
+
+**CRITICAL: SUBCOMMAND DISCOVERY**
+PAY SPECIAL ATTENTION to discovering ALL available subcommands. This is the MOST IMPORTANT part of your task.
+- Look for sections like "Commands:", "Available Commands:", "Subcommands:", "COMMANDS:"
+- Check "Usage:" or "USAGE:" lines that show command hierarchy
+- Examine any list of command names that can be invoked as subcommands
+- Include ALL subcommand names found, even if they appear in different sections
+- Subcommands are often listed with brief descriptions - extract the command name from each line
+- Do NOT skip or omit any subcommands - completeness is critical
+- List immediate child subcommand names only (not nested sub-subcommands)
 
 Return only JSON.
 """
@@ -32,7 +58,8 @@ FEWSHOT = [
                 {"name":"INPUT","index":0,"variadic":False,"required":True,"type":"path","description":"Source file path"},
                 {"name":"OUTPUT","index":1,"variadic":False,"required":False,"type":"path","description":"Destination path"}
             ],
-            "subcommands": []
+            "subcommands": [],
+            "requires_subcommand": False
         }
     },
     {
@@ -47,7 +74,8 @@ FEWSHOT = [
                 {"long":"--profile","short":None,"is_flag":False,"type":"str","choices":None,"required":False,"default":None,"description":"Profile name","repeatable":False,"envvar":None,"aliases":[]}
             ],
             "positionals": [],
-            "subcommands": ["pull","push","info"]
+            "subcommands": ["pull","push","info"],
+            "requires_subcommand": True
         }
     }
 ]

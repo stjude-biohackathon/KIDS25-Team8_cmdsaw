@@ -24,6 +24,7 @@ def try_help(command_path: list[str], help_flags: Iterable[str], *, timeout: int
     :return: Tuple of (help text, exit code)
     :rtype: tuple[str,int]
     """
+    print(f"Invoking help for: {' '.join(command_path)}")
     for hf in help_flags:
         if hf == "help":
             cmdline = command_path + ["help"]
@@ -52,13 +53,16 @@ def try_version(command_path: list[str], *, timeout: int, env: Mapping[str,str] 
     :return: Extracted version number, or None if not found
     :rtype: str | None
     """
+    print(f"Checking version for: {' '.join(command_path)}")
     for vf in VERSION_FLAG_CANDIDATES:
         cmdline = command_path + [vf]
         out, _ = run_capture(cmdline, timeout=timeout, env=env, cwd=cwd)
         if out:
             v = extract_version_number(out.splitlines()[0])
             if v:
+                print(f"  Found version: {v}")
                 return v
+    print(f"  No version found")
     return None
 
 def now_iso() -> str:

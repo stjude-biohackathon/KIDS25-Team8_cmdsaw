@@ -32,6 +32,7 @@ class CommandDoc(BaseModel):
     options: List[OptionDoc] = Field(default_factory=list)
     positionals: List[PositionalDoc] = Field(default_factory=list)
     subcommands: List[str] = Field(default_factory=list)
+    requires_subcommand: bool = False
 
 class ToolDoc(BaseModel):
     command: str
