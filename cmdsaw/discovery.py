@@ -8,6 +8,84 @@ from .constants import DEFAULT_TIMEOUT, DEFAULT_MAX_DEPTH, DEFAULT_CONCURRENCY, 
 from .runner import try_help, try_version, now_iso
 from .utils import which_or_raise
 
+def _review_subcommands(discovered: List[str], root_cmd: str) -> List[str]:
+    """
+    Interactive review of discovered subcommands.
+    
+    Allows user to confirm, add missing, or remove extraneous subcommands.
+    
+    :param discovered: List of discovered subcommand names
+    :type discovered: List[str]
+    :param root_cmd: Root command name
+    :type root_cmd: str
+    :return: Reviewed and modified list of subcommands
+    :rtype: List[str]
+    """
+    print(f"\n{'='*60}")
+    print(f"SUBCOMMAND REVIEW for '{root_cmd}'")
+    print(f"{'='*60}")
+    print(f"\nDiscovered {len(discovered)} subcommand(s):")
+    for i, subcmd in enumerate(discovered, 1):
+        print(f"  {i}. {subcmd}")
+    
+    print(f"\nOptions:")
+    print(f"  [c] Confirm and continue with these subcommands")
+    print(f"  [a] Add missing subcommands")
+    print(f"  [r] Remove extraneous subcommands")
+    print(f"  [e] Edit the full list manually")
+    
+    while True:
+        choice = input(f"\nYour choice [c/a/r/e]: ").strip().lower()
+        
+        if choice == 'c':
+            print(f"Confirmed. Proceeding with {len(discovered)} subcommand(s).")
+            return discovered
+        
+        elif choice == 'a':
+            print(f"\nEnter subcommands to add (comma-separated, or press Enter to cancel):")
+            additions = input("> ").strip()
+            if additions:
+                new_subcmds = [s.strip() for s in additions.split(',') if s.strip()]
+                discovered.extend(new_subcmds)
+                print(f"Added {len(new_subcmds)} subcommand(s).")
+                print(f"Current list: {', '.join(discovered)}")
+            else:
+                print("No subcommands added.")
+        
+        elif choice == 'r':
+            print(f"\nCurrent subcommands:")
+            for i, subcmd in enumerate(discovered, 1):
+                print(f"  {i}. {subcmd}")
+            print(f"\nEnter numbers to remove (comma-separated, or press Enter to cancel):")
+            removals = input("> ").strip()
+            if removals:
+                try:
+                    indices = [int(x.strip()) - 1 for x in removals.split(',') if x.strip()]
+                    to_remove = [discovered[i] for i in indices if 0 <= i < len(discovered)]
+                    for subcmd in to_remove:
+                        discovered.remove(subcmd)
+                    print(f"Removed {len(to_remove)} subcommand(s).")
+                    print(f"Current list: {', '.join(discovered)}")
+                except (ValueError, IndexError) as e:
+                    print(f"Invalid input: {e}. Please try again.")
+            else:
+                print("No subcommands removed.")
+        
+        elif choice == 'e':
+            print(f"\nEnter the complete list of subcommands (comma-separated):")
+            print(f"Current: {', '.join(discovered)}")
+            new_list = input("> ").strip()
+            if new_list:
+                discovered = [s.strip() for s in new_list.split(',') if s.strip()]
+                print(f"Updated to {len(discovered)} subcommand(s): {', '.join(discovered)}")
+            else:
+                print("No changes made.")
+        
+        else:
+            print(f"Invalid choice. Please enter c, a, r, or e.")
+    
+    return discovered
+
 def build_tree(
     *,
     root_cmd: str,
@@ -19,6 +97,7 @@ def build_tree(
     help_flags: tuple[str,...] = ("--help","-h","help"),
     concurrency: int = DEFAULT_CONCURRENCY,
     use_cache: bool = True,
+    review_subcommands: bool = False,
 ) -> Tuple[CmdSawResult, List[CommandDoc]]:
     """
     Build a complete documentation tree for a command and its subcommands.
@@ -44,6 +123,8 @@ def build_tree(
     :type concurrency: int
     :param use_cache: Whether to use on-disk LLM parse cache
     :type use_cache: bool
+    :param review_subcommands: Whether to enable interactive review of subcommands
+    :type review_subcommands: bool
     :return: Tuple of (complete result, list of all command docs)
     :rtype: Tuple[CmdSawResult, List[CommandDoc]]
     """
@@ -71,11 +152,18 @@ def build_tree(
         cache_getset=cache_getset,
     )
     visited: Set[str] = set([root_doc.path])
-    queue: List[tuple[str,int]] = [(name, 1) for name in root_doc.subcommands]
+    
+    # Handle subcommand review if enabled
+    subcommands_to_process = list(root_doc.subcommands)
     if root_doc.subcommands:
         print(f"Discovered {len(root_doc.subcommands)} subcommand(s) in root: {', '.join(root_doc.subcommands)}")
     else:
         print("No subcommands discovered in root")
+    
+    if review_subcommands:
+        subcommands_to_process = _review_subcommands(subcommands_to_process, root_cmd)
+    
+    queue: List[tuple[str,int]] = [(name, 1) for name in subcommands_to_process]
 
     subdocs: Dict[str, CommandDoc] = {}
 

@@ -17,7 +17,8 @@ from .wdl import emit_wdl
 @click.option("--workdir", type=click.Path(file_okay=False, exists=True), help="Working directory")
 @click.option("--env", multiple=True, help="Extra env vars: KEY=VAL", metavar="KEY=VAL")
 @click.option("--no-llm-cache", is_flag=True, default=False, help="Disable on-disk LLM parse cache")
-def main(command, model, output, wdl_out, timeout, max_depth, concurrency, help_flags, workdir, env, no_llm_cache):
+@click.option("--review-subcommands", is_flag=True, default=False, help="Enable interactive review of discovered subcommands")
+def main(command, model, output, wdl_out, timeout, max_depth, concurrency, help_flags, workdir, env, no_llm_cache, review_subcommands):
     """
     Parse CLI help text using LLM and emit structured documentation.
 
@@ -47,6 +48,8 @@ def main(command, model, output, wdl_out, timeout, max_depth, concurrency, help_
     :type env: tuple[str, ...]
     :param no_llm_cache: Whether to disable LLM parse cache
     :type no_llm_cache: bool
+    :param review_subcommands: Whether to enable interactive review of subcommands
+    :type review_subcommands: bool
     :return: None
     :rtype: None
     """
@@ -71,6 +74,7 @@ def main(command, model, output, wdl_out, timeout, max_depth, concurrency, help_
         help_flags=flags,
         concurrency=concurrency,
         use_cache=not no_llm_cache,
+        review_subcommands=review_subcommands,
     )
 
     click.echo(f"\nFound {len(all_docs)} total commands (including root)")
