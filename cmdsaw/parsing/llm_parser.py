@@ -69,9 +69,13 @@ def parse_command_help(*, model_name: str, command_path: str, help_text: str, re
             return result
         except ValidationError as e:
             if attempt >= retries:
-                print(f"  WARNING: Validation failed after {retries} retries for {command_path}: {str(e)}")
+                error_msg = str(e)
+                print(f"  WARNING: Validation failed after {retries} retries for {command_path}")
+                print(f"  Error: {error_msg[:200]}{'...' if len(error_msg) > 200 else ''}")
                 print(f"  Returning empty doc")
                 return CommandDoc(name=command_path.split()[-1], path=command_path, help_text=help_text, options=[], positionals=[], subcommands=[])
-            print(f"  Validation error on attempt {attempt + 1}: {str(e)[:100]}...")
+            error_msg = str(e)
+            print(f"  Validation error on attempt {attempt + 1}:")
+            print(f"  {error_msg[:150]}{'...' if len(error_msg) > 150 else ''}")
             print(f"  Retrying...")
             user_blob += "\nReminder: Return ONLY valid JSON matching the CommandDoc schema."

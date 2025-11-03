@@ -53,7 +53,7 @@ def build_tree(
     diagnostics = ParseDiagnostics()
     cache = ParseCache() if use_cache else None
     cache_getset = (cache.get, cache.set) if cache else None
-    if use_cache:
+    if cache:
         print(f"LLM cache enabled at: {cache.root}")
     else:
         print("LLM cache disabled")
