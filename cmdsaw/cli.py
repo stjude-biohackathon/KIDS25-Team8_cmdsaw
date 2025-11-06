@@ -1,4 +1,5 @@
 from __future__ import annotations
+import time
 import click
 from .constants import DEFAULT_MODEL, DEFAULT_TIMEOUT, DEFAULT_MAX_DEPTH, DEFAULT_CONCURRENCY
 from .discovery import build_tree
@@ -53,6 +54,7 @@ def main(command, model, output, wdl_out, timeout, max_depth, concurrency, help_
     :return: None
     :rtype: None
     """
+    start_time = time.time()
     click.echo(f"Starting cmdsaw for command: {command}")
     click.echo(f"Using model: {model}")
     click.echo(f"Max depth: {max_depth}, Concurrency: {concurrency}")
@@ -91,4 +93,7 @@ def main(command, model, output, wdl_out, timeout, max_depth, concurrency, help_
     if wdl_out:
         click.echo(f"Generating WDL tasks to: {wdl_out}")
         emit_wdl(tool_name=command, docs=all_docs, out_path=wdl_out, model_name=model)
+    
+    elapsed_time = time.time() - start_time
+    click.echo(f"\nTotal execution time: {elapsed_time:.2f} seconds")
 
