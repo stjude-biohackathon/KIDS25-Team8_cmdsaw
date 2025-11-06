@@ -79,17 +79,17 @@ FEWSHOT = [
         }
     },
     {
-        "help_text": "Tool:    bedtools bamtofastq (aka bamToFastq)\nVersion: v2.31.1\nSummary: Convert BAM alignments to FASTQ files.\n\nUsage:   bamToFastq [OPTIONS] -i <BAM> -fq <FQ>\n\nOptions:\n        -fq2    FASTQ for second end.  Used if BAM contains paired-end data.\n                BAM should be sorted by query name is creating paired FASTQ.\n\n        -tags   Create FASTQ based on the mate info\n                in the BAM R2 and Q2 tags.\n",
-        "command_path": "bamToFastq",
+        "help_text": "Tool:    bioconvert readextract (aka readExtractor)\nVersion: v1.8.2\nSummary: Extract reads from alignment files into sequence format.\n\nUsage:   readExtractor [OPTIONS] -i <ALN> -o <SEQ>\n\nOptions:\n        -o2     Secondary output file. Used if input contains paired reads.\n                Input should be sorted by read name for paired output.\n\n        -meta   Extract reads using metadata tags\n                stored in the alignment header.\n",
+        "command_path": "readExtractor",
         "json": {
-            "name": "bamToFastq",
-            "path": "bamToFastq",
-            "help_text": "Tool:    bedtools bamtofastq...",
+            "name": "readExtractor",
+            "path": "readExtractor",
+            "help_text": "Tool:    bioconvert readextract...",
             "options": [
-                {"long":"-i","short":None,"is_flag":False,"type":"path","choices":None,"required":True,"default":None,"description":"Input BAM file","repeatable":False,"envvar":None,"aliases":[]},
-                {"long":"-fq","short":None,"is_flag":False,"type":"path","choices":None,"required":True,"default":None,"description":"Output FASTQ file","repeatable":False,"envvar":None,"aliases":[]},
-                {"long":"-fq2","short":None,"is_flag":False,"type":"path","choices":None,"required":False,"default":None,"description":"FASTQ for second end. Used if BAM contains paired-end data. BAM should be sorted by query name if creating paired FASTQ.","repeatable":False,"envvar":None,"aliases":[]},
-                {"long":"-tags","short":None,"is_flag":True,"type":"bool","choices":None,"required":False,"default":None,"description":"Create FASTQ based on the mate info in the BAM R2 and Q2 tags.","repeatable":False,"envvar":None,"aliases":[]}
+                {"long":"-i","short":None,"is_flag":False,"type":"path","choices":None,"required":True,"default":None,"description":"Input alignment file","repeatable":False,"envvar":None,"aliases":[]},
+                {"long":"-o","short":None,"is_flag":False,"type":"path","choices":None,"required":True,"default":None,"description":"Output sequence file","repeatable":False,"envvar":None,"aliases":[]},
+                {"long":"-o2","short":None,"is_flag":False,"type":"path","choices":None,"required":False,"default":None,"description":"Secondary output file. Used if input contains paired reads. Input should be sorted by read name for paired output.","repeatable":False,"envvar":None,"aliases":[]},
+                {"long":"-meta","short":None,"is_flag":True,"type":"bool","choices":None,"required":False,"default":None,"description":"Extract reads using metadata tags stored in the alignment header.","repeatable":False,"envvar":None,"aliases":[]}
             ],
             "positionals": [],
             "subcommands": [],
