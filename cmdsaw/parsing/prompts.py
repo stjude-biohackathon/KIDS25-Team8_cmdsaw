@@ -46,7 +46,7 @@ FEWSHOT = [
         "json": {
             "name": "imgkit",
             "path": "imgkit",
-            "help_text": "imgkit 1.4.0...",
+            "help_text": "imgkit 1.4.0\n\nUSAGE:\n  imgkit [OPTIONS] <INPUT> [OUTPUT]\n\nOPTIONS:\n  -q, --quality INT           JPEG quality (default: 90)\n      --format {png|jpg|webp} Output format\n  -v, --verbose               Increase verbosity\n  -t, --threads INT           Number of worker threads (default: 4)\n      --no-color              Disable colored output\n\nARGUMENTS:\n  INPUT                        Source file path\n  OUTPUT                       Destination path\n",
             "options": [
                 {"long":"--quality","short":"-q","is_flag":False,"type":"int","choices":None,"required":False,"default":"90","description":"JPEG quality","repeatable":False,"envvar":None,"aliases":[]},
                 {"long":"--format","short":None,"is_flag":False,"type":"choice","choices":["png","jpg","webp"],"required":False,"default":None,"description":"Output format","repeatable":False,"envvar":None,"aliases":[]},
@@ -68,7 +68,7 @@ FEWSHOT = [
         "json": {
             "name": "datactl",
             "path": "datactl",
-            "help_text": "datactl...",
+            "help_text": "datactl\n\nManage datasets.\n\nUsage:\n  datactl [command]\n\nAvailable Commands:\n  pull        Download a dataset\n  push        Upload a dataset\n  info        Show dataset info\n\nFlags:\n  -h, --help     help for datactl\n      --profile  Profile name\n",
             "options": [
                 {"long":"--help","short":"-h","is_flag":True,"type":"bool","choices":None,"required":False,"default":None,"description":"help for datactl","repeatable":False,"envvar":None,"aliases":[]},
                 {"long":"--profile","short":None,"is_flag":False,"type":"str","choices":None,"required":False,"default":None,"description":"Profile name","repeatable":False,"envvar":None,"aliases":[]}
@@ -84,7 +84,7 @@ FEWSHOT = [
         "json": {
             "name": "readExtractor",
             "path": "readExtractor",
-            "help_text": "Tool:    bioconvert readextract...",
+            "help_text": "Tool:    bioconvert readextract (aka readExtractor)\nVersion: v1.8.2\nSummary: Extract reads from alignment files into sequence format.\n\nUsage:   readExtractor [OPTIONS] -i <ALN> -o <SEQ>\n\nOptions:\n        -o2     Secondary output file. Used if input contains paired reads.\n                Input should be sorted by read name for paired output.\n\n        -meta   Extract reads using metadata tags\n                stored in the alignment header.\n",
             "options": [
                 {"long":"-i","short":None,"is_flag":False,"type":"path","choices":None,"required":True,"default":None,"description":"Input alignment file","repeatable":False,"envvar":None,"aliases":[]},
                 {"long":"-o","short":None,"is_flag":False,"type":"path","choices":None,"required":True,"default":None,"description":"Output sequence file","repeatable":False,"envvar":None,"aliases":[]},
@@ -102,7 +102,7 @@ FEWSHOT = [
         "json": {
             "name": "seqproc",
             "path": "seqproc",
-            "help_text": "seqproc v1.2...",
+            "help_text": "seqproc v1.2\n\nProcess sequence files with various operations\n\nUSAGE:\n  seqproc <operation> [OPTIONS] <input.fasta>\n\nOPERATIONS:\n  filter      Filter sequences by criteria\n  trim        Trim sequences\n  merge       Merge multiple files\n\nOPTIONS:\n  --min-length INT    Minimum sequence length (default: 50)\n  --max-length INT    Maximum sequence length\n  -o, --output FILE   Output file (default: stdout)\n  --format {fasta|fastq|gff}  Output format\n  -v...               Verbosity level (repeat for more)\n\nARGUMENTS:\n  input.fasta         Input sequence file(s) (can specify multiple)\n",
             "options": [
                 {"long":"--min-length","short":None,"is_flag":False,"type":"int","choices":None,"required":False,"default":"50","description":"Minimum sequence length","repeatable":False,"envvar":None,"aliases":[]},
                 {"long":"--max-length","short":None,"is_flag":False,"type":"int","choices":None,"required":False,"default":None,"description":"Maximum sequence length","repeatable":False,"envvar":None,"aliases":[]},
@@ -124,7 +124,7 @@ FEWSHOT = [
         "json": {
             "name": "genomealign",
             "path": "genomealign",
-            "help_text": "genomealign 2.4.1...",
+            "help_text": "genomealign 2.4.1\n\nAlign genomic sequences to reference\n\nUsage: genomealign [options] <reference.fa> <query.fa> [query2.fa...]\n\nRequired:\n  reference.fa        Reference genome file\n  query.fa            Query sequence file(s)\n\nAlignment Options:\n  -k, --kmer INT      K-mer size for seeding (default: 15)\n  -w, --window INT    Window size for extension (default: 64)\n  -m, --match INT     Match score (default: 2)\n  -x, --mismatch INT  Mismatch penalty (default: -3)\n  -g, --gap INT       Gap penalty (default: -5)\n  --min-score FLOAT   Minimum alignment score (default: 0.0)\n\nOutput Options:\n  -o, --output FILE   Output file (required)\n  --format {sam|bam|paf}  Output format (default: sam)\n  --no-header         Omit header from output\n\nPerformance:\n  -t, --threads INT   Number of threads (default: 1)\n  --mem-gb INT        Memory limit in GB\n",
             "options": [
                 {"long":"--kmer","short":"-k","is_flag":False,"type":"int","choices":None,"required":False,"default":"15","description":"K-mer size for seeding","repeatable":False,"envvar":None,"aliases":[]},
                 {"long":"--window","short":"-w","is_flag":False,"type":"int","choices":None,"required":False,"default":"64","description":"Window size for extension","repeatable":False,"envvar":None,"aliases":[]},
