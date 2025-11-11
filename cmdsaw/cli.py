@@ -87,12 +87,17 @@ def main(command, model, output, wdl_out, timeout, max_depth, concurrency, help_
         for doc in all_docs[1:]:  # Skip root command
             click.echo(f"  - {doc.path}")
     
-    if output:
-        click.echo(f"\nWriting JSON output to: {output}")
-        write_json(output, result)
-    if wdl_out:
-        click.echo(f"Generating WDL tasks to: {wdl_out}")
-        emit_wdl(tool_name=command, docs=all_docs, out_path=wdl_out, model_name=model)
+    # Set default output filenames if not provided
+    version = result.tool.version or "unknown"
+    if not output:
+        output = f"{command}_{version}.json"
+    if not wdl_out:
+        wdl_out = f"{command}_{version}.wdl"
+    
+    click.echo(f"\nWriting JSON output to: {output}")
+    write_json(output, result)
+    click.echo(f"Generating WDL tasks to: {wdl_out}")
+    emit_wdl(tool_name=command, docs=all_docs, out_path=wdl_out, model_name=model)
     
     elapsed_time = time.time() - start_time
     click.echo(f"\nTotal execution time: {elapsed_time:.2f} seconds")
