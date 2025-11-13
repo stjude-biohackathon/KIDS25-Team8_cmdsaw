@@ -252,6 +252,8 @@ def build_tree(
         version=version,
         help_text=help_text,
         invocation=[bin_path],
+        options=root_doc.options,
+        positionals=root_doc.positionals,
         subcommands=[subdocs[k] for k in sorted(subdocs.keys()) if k.count(" ")==1],
         captured_at=now_iso(),
     )

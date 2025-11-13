@@ -39,6 +39,8 @@ class ToolDoc(BaseModel):
     version: Optional[str] = None
     help_text: str
     invocation: List[str]
+    options: List[OptionDoc] = Field(default_factory=list)
+    positionals: List[PositionalDoc] = Field(default_factory=list)
     subcommands: List[CommandDoc] = Field(default_factory=list)
     captured_at: str
 
