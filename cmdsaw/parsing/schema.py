@@ -43,6 +43,7 @@ class ToolDoc(BaseModel):
     positionals: List[PositionalDoc] = Field(default_factory=list)
     subcommands: List[CommandDoc] = Field(default_factory=list)
     captured_at: str
+    container_info: Optional["ContainerInfo"] = None
 
 class ParseDiagnostics(BaseModel):
     warnings: List[str] = Field(default_factory=list)

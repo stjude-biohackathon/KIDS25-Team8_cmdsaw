@@ -1,12 +1,13 @@
 from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict, Optional, Mapping, Set, Tuple
-from .parsing.schema import CommandDoc, ToolDoc, CmdSawResult, ParseDiagnostics
+from .parsing.schema import CommandDoc, ToolDoc, CmdSawResult, ParseDiagnostics, ContainerInfo
 from .parsing.llm_parser import parse_command_help
 from .parsing.cache import ParseCache
 from .constants import DEFAULT_TIMEOUT, DEFAULT_MAX_DEPTH, DEFAULT_CONCURRENCY, SCHEMA_VERSION
 from .runner import try_help, try_version, now_iso
 from .utils import which_or_raise
+from .containers import request_biocontainers
 
 def _review_subcommands(discovered: List[str], root_cmd: str, help_text: str = None, model_name: str = None, provider: str = "ollama", temperature: float = 0.0, google_api_key: str = None, cache_getset: tuple = None) -> List[str]:
     """
@@ -274,6 +275,17 @@ def build_tree(
                 for child in doc.subcommands:
                     queue.append((f"{path} {child}", path.count(" ") + 1))
 
+    # Fetch container information if version is available
+    container_info = None
+    if version:
+        print(f"\nFetching container info for {root_cmd} version {version}...")
+        container_data = request_biocontainers(root_cmd, version)
+        if "error" not in container_data:
+            container_info = ContainerInfo(**container_data)
+            print(f"  Found container info: docker={container_info.docker}, singularity={container_info.singularity}, bioconda={container_info.bioconda}")
+        else:
+            print(f"  Container info not available: {container_data.get('message', 'Unknown error')}")
+    
     tool = ToolDoc(
         command=root_cmd,
         version=version,
@@ -283,6 +295,7 @@ def build_tree(
         positionals=root_doc.positionals,
         subcommands=[subdocs[k] for k in sorted(subdocs.keys()) if k.count(" ")==1],
         captured_at=now_iso(),
+        container_info=container_info,
     )
     result = CmdSawResult(schema_version=SCHEMA_VERSION, tool=tool, diagnostics=diagnostics)
     all_docs: List[CommandDoc] = [root_doc] + [subdocs[k] for k in sorted(subdocs.keys())]
