@@ -1,7 +1,7 @@
 from __future__ import annotations
 import re
 from typing import List, Optional
-from .parsing.schema import CommandDoc, OptionDoc, PositionalDoc
+from .parsing.schema import CommandDoc, OptionDoc, PositionalDoc, ContainerInfo
 from .parsing.resource_estimator import estimate_resources, ResourceEstimate
 
 def _sanitize_task_name(path: str) -> str:
@@ -25,7 +25,7 @@ def _sanitize_var_name(name: str) -> str:
     """
     Convert an option name to a valid WDL variable name.
 
-    Removes dashes, converts to lowercase, replaces special characters with
+    Removes dashes, preserves case, replaces special characters with
     underscores, and ensures the name starts with a letter.
 
     :param name: Option name (e.g., "--output-file" or "-o")
@@ -33,8 +33,7 @@ def _sanitize_var_name(name: str) -> str:
     :return: Sanitized variable name suitable for WDL
     :rtype: str
     """
-    s = name.lower()
-    s = s.replace("--", "").replace("-", "_")
+    s = name.replace("--", "").replace("-", "_")
     s = re.sub(r"[^A-Za-z0-9_]", "_", s)
     if not s or not s[0].isalpha():
         s = f"v_{s}"
@@ -212,7 +211,7 @@ def _command_block(cmd: CommandDoc) -> str:
             parts.append(f'~{{if defined({var}) then {var} else ""}}')
     return " \\\n    ".join(parts)
 
-def _task_for(doc: CommandDoc, model_name: str, provider: str = "ollama", temperature: float = 0.0, google_api_key: Optional[str] = None) -> str:
+def _task_for(doc: CommandDoc, model_name: str, provider: str = "ollama", temperature: float = 0.0, google_api_key: Optional[str] = None, container_info = None) -> str:
     """
     Generate a complete WDL task definition for a command.
 
@@ -229,6 +228,8 @@ def _task_for(doc: CommandDoc, model_name: str, provider: str = "ollama", temper
     :type temperature: float
     :param google_api_key: Google API key (required for Google provider)
     :type google_api_key: str
+    :param container_info: Container information (docker, singularity, bioconda)
+    :type container_info: ContainerInfo | None
     :return: Complete WDL task definition as a string
     :rtype: str
     """
@@ -239,6 +240,19 @@ def _task_for(doc: CommandDoc, model_name: str, provider: str = "ollama", temper
     meta_block = ",\n".join(metas) if metas else ""
     cpu_default = est.cpu
     mem_default = int(round(est.mem_gb))
+    
+    # Build runtime block with container info
+    runtime_lines = [
+        f"cpu: ~{{{{select_first([cpu, {cpu_default}])}}}}",
+        f"memory: \"~{{{{select_first([memory_gb, {mem_default}])}}}}G\""
+    ]
+    
+    # Add docker container if available (WDL 1.2 spec)
+    if container_info and container_info.docker:
+        runtime_lines.append(f"docker: \"{container_info.docker}\"")
+    
+    runtime_block = "\n        ".join(runtime_lines)
+    
     return f"""task {tname} {{
     input {{
         {inputs if inputs else ""}
@@ -247,15 +261,14 @@ def _task_for(doc: CommandDoc, model_name: str, provider: str = "ollama", temper
         {cmd_block}
     >>>
     runtime {{
-        cpu: ~{{{{select_first([cpu, {cpu_default}])}}}}
-        memory: "~{{{{select_first([memory_gb, {mem_default}])}}}}G"
+        {runtime_block}
     }}
     parameter_meta {{
         {meta_block}
     }}
 }}"""
 
-def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_name: str, provider: str = "ollama", temperature: float = 0.0, google_api_key: Optional[str] = None) -> None:
+def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_name: str, provider: str = "ollama", temperature: float = 0.0, google_api_key: Optional[str] = None, container_info = None) -> None:
     """
     Write WDL task definitions for all commands to a file.
 
@@ -277,6 +290,8 @@ def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_nam
     :type temperature: float
     :param google_api_key: Google API key (required for Google provider)
     :type google_api_key: str
+    :param container_info: Container information (docker, singularity, bioconda)
+    :type container_info: ContainerInfo | None
     :return: None
     :rtype: None
     """
@@ -288,11 +303,14 @@ def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_nam
         print(f"\nSkipping {skipped_count} command(s) that require subcommands")
     
     print(f"\nGenerating WDL 1.2 tasks for {len(valid_docs)} command(s)...")
+    if container_info and container_info.docker:
+        print(f"  Using docker container: {container_info.docker}")
+    
     header = 'version 1.2'
     seen = set()
     tasks = []
     for d in valid_docs:
-        t = _task_for(d, model_name=model_name, provider=provider, temperature=temperature, google_api_key=google_api_key)
+        t = _task_for(d, model_name=model_name, provider=provider, temperature=temperature, google_api_key=google_api_key, container_info=container_info)
         name = _sanitize_task_name(d.path)
         if name in seen:
             idx = 2

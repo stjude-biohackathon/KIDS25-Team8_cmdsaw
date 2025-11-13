@@ -123,7 +123,7 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
     click.echo(f"\nWriting JSON output to: {output}")
     write_json(output, result)
     click.echo(f"Generating WDL tasks to: {wdl_out}")
-    emit_wdl(tool_name=command, docs=all_docs, out_path=wdl_out, model_name=model, provider=provider, temperature=temperature, google_api_key=google_api_key)
+    emit_wdl(tool_name=command, docs=all_docs, out_path=wdl_out, model_name=model, provider=provider, temperature=temperature, google_api_key=google_api_key, container_info=result.tool.container_info)
     
     elapsed_time = time.time() - start_time
     click.echo(f"\nTotal execution time: {elapsed_time:.2f} seconds")
