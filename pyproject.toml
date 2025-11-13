@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling>=1.22"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cmdsaw"
+version = "0.2.0"
+description = "LLM-only CLI help parser with subcommand recursion, WDL emission, and resource estimation"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name="cmdsaw authors"}]
+dependencies = [
+  "click>=8",
+  "pydantic>=2",
+  "typing-extensions>=4.7",
+  "rich>=13.7",
+  "langchain>=1.0,<2",
+  "langchain-core>=0.2",
+  "langchain-ollama>=0.1.0",
+  "ollama>=0.1.0",
+  "langchain-google-genai>=2.0.0",
+]
+
+[project.scripts]
+cmdsaw = "cmdsaw.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["cmdsaw"]

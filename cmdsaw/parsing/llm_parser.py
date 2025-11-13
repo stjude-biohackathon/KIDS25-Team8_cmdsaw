@@ -1,0 +1,164 @@
+from __future__ import annotations
+from typing import Optional, Tuple, Union
+from pydantic import ValidationError
+from .schema import CommandDoc
+from .prompts import SYSTEM_PROMPT, FEWSHOT, EMPHASIZED_SUBCOMMAND_PROMPT
+from langchain_ollama import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+def _build_model(model_name: str, provider: str = "ollama", temperature: float = 0.0, google_api_key: Optional[str] = None) -> Union[ChatOllama, ChatGoogleGenerativeAI]:
+    """
+    Create a chat model instance for LLM parsing.
+
+    :param model_name: Name of the model to use
+    :type model_name: str
+    :param provider: LLM provider ('ollama' or 'google')
+    :type provider: str
+    :param temperature: Sampling temperature (0.0 for deterministic)
+    :type temperature: float
+    :param google_api_key: Google API key (required for Google provider)
+    :type google_api_key: Optional[str]
+    :return: Configured chat model instance
+    :rtype: Union[ChatOllama, ChatGoogleGenerativeAI]
+    """
+    if provider == "google":
+        if not google_api_key:
+            raise ValueError("Google API key is required when using the 'google' provider")
+        return ChatGoogleGenerativeAI(
+            model=model_name,
+            temperature=temperature,
+            google_api_key=google_api_key
+        )
+    elif provider == "ollama":
+        return ChatOllama(model=model_name, temperature=temperature)
+    else:
+        raise ValueError(f"Unknown provider: {provider}. Must be 'ollama' or 'google'")
+
+def parse_command_help(*, model_name: str, provider: str = "ollama", temperature: float = 0.0, google_api_key: Optional[str] = None, command_path: str, help_text: str, retries: int = 2, cache_getset: Optional[Tuple] = None) -> CommandDoc:
+    """
+    Parse command help text using an LLM to extract structured documentation.
+
+    Uses few-shot prompting with an LLM model to convert raw help text
+    into a structured CommandDoc. Supports caching and retry logic for
+    validation errors.
+
+    :param model_name: Name of the model to use for parsing
+    :type model_name: str
+    :param provider: LLM provider ('ollama' or 'google')
+    :type provider: str
+    :param temperature: Model temperature (0.0 = deterministic)
+    :type temperature: float
+    :param google_api_key: Google API key (required for Google provider)
+    :type google_api_key: Optional[str]
+    :param command_path: Full command path (e.g., "samtools view")
+    :type command_path: str
+    :param help_text: Raw help text output from the command
+    :type help_text: str
+    :param retries: Number of retry attempts on validation failure
+    :type retries: int
+    :param cache_getset: Optional tuple of (get_func, set_func) for caching
+    :type cache_getset: Optional[Tuple]
+    :return: Parsed command documentation
+    :rtype: CommandDoc
+    """
+    cache_get, cache_set = (cache_getset or (None, None))
+    if cache_get:
+        cached = cache_get(command_path, None, model_name, help_text)
+        if cached:
+            print(f"  Cache HIT for: {command_path}")
+            return CommandDoc.model_validate(cached)
+        print(f"  Cache MISS for: {command_path}")
+
+    print(f"  Parsing with LLM model {model_name} (provider: {provider})...")
+    model = _build_model(model_name, provider, temperature, google_api_key)
+    structured = model.with_structured_output(CommandDoc)
+
+    fewshot_blob = ""
+    for ex in FEWSHOT:
+        fewshot_blob += f"\n### Example help:\n{ex['help_text']}\n### Example JSON:\n{ex['json']}\n"
+    user_blob = f"command_path: {command_path}\n\nhelp_text:\n{help_text}\n"
+
+    for attempt in range(retries + 1):
+        try:
+            result: CommandDoc = structured.invoke([
+                {"role": "system", "content": SYSTEM_PROMPT + fewshot_blob},
+                {"role": "user", "content": user_blob},
+            ])
+            print(f"  Successfully parsed: {command_path}")
+            if cache_set:
+                cache_set(command_path, None, model_name, help_text, result.model_dump())
+                print(f"  Cached result for: {command_path}")
+            return result
+        except ValidationError as e:
+            if attempt >= retries:
+                error_msg = str(e)
+                print(f"  WARNING: Validation failed after {retries} retries for {command_path}")
+                print(f"  Error: {error_msg[:200]}{'...' if len(error_msg) > 200 else ''}")
+                print(f"  Returning empty doc")
+                return CommandDoc(name=command_path.split()[-1], path=command_path, help_text=help_text, options=[], positionals=[], subcommands=[])
+            error_msg = str(e)
+            print(f"  Validation error on attempt {attempt + 1}:")
+            print(f"  {error_msg[:150]}{'...' if len(error_msg) > 150 else ''}")
+            print(f"  Retrying...")
+            user_blob += "\nReminder: Return ONLY valid JSON matching the CommandDoc schema."
+
+def parse_command_help_with_emphasis(*, model_name: str, provider: str = "ollama", temperature: float = 0.0, google_api_key: Optional[str] = None, command_path: str, help_text: str, retries: int = 2, cache_getset: Optional[Tuple] = None) -> CommandDoc:
+    """
+    Parse command help text with special emphasis on discovering all subcommands.
+    
+    Uses an emphasized system prompt that specifically instructs the LLM to
+    carefully identify and list ALL available subcommands.
+    
+    :param model_name: Name of the model to use for parsing
+    :type model_name: str
+    :param provider: LLM provider ('ollama' or 'google')
+    :type provider: str
+    :param temperature: Model temperature (0.0 = deterministic)
+    :type temperature: float
+    :param google_api_key: Google API key (required for Google provider)
+    :type google_api_key: Optional[str]
+    :param command_path: Full command path (e.g., "samtools view")
+    :type command_path: str
+    :param help_text: Raw help text output from the command
+    :type help_text: str
+    :param retries: Number of retry attempts on validation failure
+    :type retries: int
+    :param cache_getset: Optional tuple of (get_func, set_func) for caching
+    :type cache_getset: Optional[Tuple]
+    :return: Parsed command documentation
+    :rtype: CommandDoc
+    """
+    print(f"  Re-parsing with EMPHASIZED subcommand detection for: {command_path}")
+    model = _build_model(model_name, provider, temperature, google_api_key)
+    structured = model.with_structured_output(CommandDoc)
+
+    fewshot_blob = ""
+    for ex in FEWSHOT:
+        fewshot_blob += f"\n### Example help:\n{ex['help_text']}\n### Example JSON:\n{ex['json']}\n"
+    user_blob = f"command_path: {command_path}\n\nhelp_text:\n{help_text}\n"
+
+    for attempt in range(retries + 1):
+        try:
+            result: CommandDoc = structured.invoke([
+                {"role": "system", "content": EMPHASIZED_SUBCOMMAND_PROMPT + fewshot_blob},
+                {"role": "user", "content": user_blob},
+            ])
+            print(f"  Successfully re-parsed: {command_path}")
+            if cache_getset:
+                cache_get, cache_set = cache_getset
+                if cache_set:
+                    cache_set(command_path, None, model_name, help_text, result.model_dump())
+                    print(f"  Cached emphasized result for: {command_path}")
+            return result
+        except ValidationError as e:
+            if attempt >= retries:
+                error_msg = str(e)
+                print(f"  WARNING: Re-parsing validation failed after {retries} retries for {command_path}")
+                print(f"  Error: {error_msg[:200]}{'...' if len(error_msg) > 200 else ''}")
+                print(f"  Returning empty doc")
+                return CommandDoc(name=command_path.split()[-1], path=command_path, help_text=help_text, options=[], positionals=[], subcommands=[])
+            error_msg = str(e)
+            print(f"  Validation error on attempt {attempt + 1}:")
+            print(f"  {error_msg[:150]}{'...' if len(error_msg) > 150 else ''}")
+            print(f"  Retrying...")
+            user_blob += "\nReminder: Return ONLY valid JSON matching the CommandDoc schema."
