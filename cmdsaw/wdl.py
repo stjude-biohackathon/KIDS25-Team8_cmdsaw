@@ -25,7 +25,7 @@ def _sanitize_var_name(name: str) -> str:
     """
     Convert an option name to a valid WDL variable name.
 
-    Removes dashes, converts to lowercase, replaces special characters with
+    Removes dashes, preserves case, replaces special characters with
     underscores, and ensures the name starts with a letter.
 
     :param name: Option name (e.g., "--output-file" or "-o")
@@ -33,8 +33,7 @@ def _sanitize_var_name(name: str) -> str:
     :return: Sanitized variable name suitable for WDL
     :rtype: str
     """
-    s = name.lower()
-    s = s.replace("--", "").replace("-", "_")
+    s = name.replace("--", "").replace("-", "_")
     s = re.sub(r"[^A-Za-z0-9_]", "_", s)
     if not s or not s[0].isalpha():
         s = f"v_{s}"
