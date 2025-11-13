@@ -1,6 +1,6 @@
 from __future__ import annotations
 import re
-from typing import List
+from typing import List, Optional
 from .parsing.schema import CommandDoc, OptionDoc, PositionalDoc
 from .parsing.resource_estimator import estimate_resources, ResourceEstimate
 
@@ -212,7 +212,7 @@ def _command_block(cmd: CommandDoc) -> str:
             parts.append(f'~{{if defined({var}) then {var} else ""}}')
     return " \\\n    ".join(parts)
 
-def _task_for(doc: CommandDoc, model_name: str) -> str:
+def _task_for(doc: CommandDoc, model_name: str, provider: str = "ollama", temperature: float = 0.0, google_api_key: Optional[str] = None) -> str:
     """
     Generate a complete WDL task definition for a command.
 
@@ -221,13 +221,19 @@ def _task_for(doc: CommandDoc, model_name: str) -> str:
 
     :param doc: Command documentation object
     :type doc: CommandDoc
-    :param model_name: Ollama model name for resource estimation
+    :param model_name: Model name for resource estimation
     :type model_name: str
+    :param provider: LLM provider ('ollama' or 'google')
+    :type provider: str
+    :param temperature: Model temperature (0.0 = deterministic)
+    :type temperature: float
+    :param google_api_key: Google API key (required for Google provider)
+    :type google_api_key: str
     :return: Complete WDL task definition as a string
     :rtype: str
     """
     tname = _sanitize_task_name(doc.path)
-    est = estimate_resources(doc, model_name=model_name)
+    est = estimate_resources(doc, model_name=model_name, provider=provider, temperature=temperature, google_api_key=google_api_key)
     inputs, metas = _inputs_block(doc, est)
     cmd_block = _command_block(doc)
     meta_block = ",\n".join(metas) if metas else ""
@@ -249,7 +255,7 @@ def _task_for(doc: CommandDoc, model_name: str) -> str:
     }}
 }}"""
 
-def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_name: str) -> None:
+def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_name: str, provider: str = "ollama", temperature: float = 0.0, google_api_key: Optional[str] = None) -> None:
     """
     Write WDL task definitions for all commands to a file.
 
@@ -263,8 +269,14 @@ def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_nam
     :type docs: List[CommandDoc]
     :param out_path: File path where WDL will be written
     :type out_path: str
-    :param model_name: Ollama model name for resource estimation
+    :param model_name: Model name for resource estimation
     :type model_name: str
+    :param provider: LLM provider ('ollama' or 'google')
+    :type provider: str
+    :param temperature: Model temperature (0.0 = deterministic)
+    :type temperature: float
+    :param google_api_key: Google API key (required for Google provider)
+    :type google_api_key: str
     :return: None
     :rtype: None
     """
@@ -280,7 +292,7 @@ def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_nam
     seen = set()
     tasks = []
     for d in valid_docs:
-        t = _task_for(d, model_name=model_name)
+        t = _task_for(d, model_name=model_name, provider=provider, temperature=temperature, google_api_key=google_api_key)
         name = _sanitize_task_name(d.path)
         if name in seen:
             idx = 2
