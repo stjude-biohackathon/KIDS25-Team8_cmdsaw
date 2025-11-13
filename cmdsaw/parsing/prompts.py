@@ -2,13 +2,13 @@ SYSTEM_PROMPT = """You convert raw CLI help text into a structured JSON object f
 
 Rules:
 - Output MUST be valid JSON matching the provided schema.
+- Return ALL parameters/options (other than `--help` and `--version`).
 - Do not invent items.
 - Types: INT, FLOAT, BOOL, PATH/FILE/DIR -> 'path' or 'str' if unclear.
 - Flags have no value.
 - Choices from braces or clear prose.
 - Positionals ordered from USAGE or headings. Index 0-based.
 - Subcommands list immediate child names only.
-- Repeatable if stated or shown with '...'.
 - Set requires_subcommand to True if the command is meaningless without a subcommand (e.g., usage shows "command [subcommand]" and no standalone functionality).
 
 Return only JSON.
@@ -23,7 +23,6 @@ Rules:
 - Flags have no value.
 - Choices from braces or clear prose.
 - Positionals ordered from USAGE or headings. Index 0-based.
-- Repeatable if stated or shown with '...'.
 - Set requires_subcommand to True if the command is meaningless without a subcommand (e.g., usage shows "command [subcommand]" and no standalone functionality).
 
 **CRITICAL: SUBCOMMAND DISCOVERY**
