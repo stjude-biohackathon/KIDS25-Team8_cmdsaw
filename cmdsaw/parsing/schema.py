@@ -50,6 +50,11 @@ class ParseDiagnostics(BaseModel):
     llm_retries: int = 0
     visited_commands: int = 0
     version_extracted: bool = False
+    
+class ContainerInfo(BaseModel):
+    bioconda: Optional[str]
+    docker: Optional[str]
+    singularity: Optional[str]
 
 class CmdSawResult(BaseModel):
     schema_version: str
