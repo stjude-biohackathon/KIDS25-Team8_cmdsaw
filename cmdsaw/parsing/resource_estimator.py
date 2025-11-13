@@ -1,7 +1,8 @@
 from __future__ import annotations
+from typing import Optional
 from pydantic import BaseModel, Field, ValidationError
 from .schema import CommandDoc
-from langchain_ollama import ChatOllama
+from .llm_parser import _build_model
 
 class ResourceEstimate(BaseModel):
     cpu: int = Field(ge=1, description="CPU cores")
@@ -15,7 +16,7 @@ Rules:
 - If memory heavy, increase mem_gb.
 """
 
-def estimate_resources(doc: CommandDoc, model_name: str) -> ResourceEstimate:
+def estimate_resources(doc: CommandDoc, model_name: str, provider: str = "ollama", temperature: float = 0.0, google_api_key: Optional[str] = None) -> ResourceEstimate:
     """
     Estimate CPU and memory requirements for a command using an LLM.
 
@@ -25,12 +26,18 @@ def estimate_resources(doc: CommandDoc, model_name: str) -> ResourceEstimate:
 
     :param doc: Command documentation with help text
     :type doc: CommandDoc
-    :param model_name: Ollama model name to use for estimation
+    :param model_name: Model name to use for estimation
     :type model_name: str
+    :param provider: LLM provider ('ollama' or 'google')
+    :type provider: str
+    :param temperature: Model temperature (0.0 = deterministic)
+    :type temperature: float
+    :param google_api_key: Google API key (required for Google provider)
+    :type google_api_key: Optional[str]
     :return: Resource estimate with CPU cores and memory in GB
     :rtype: ResourceEstimate
     """
-    model = ChatOllama(model=model_name, temperature=0.0)
+    model = _build_model(model_name, provider, temperature, google_api_key)
     structured = model.with_structured_output(ResourceEstimate)
     user = f"command_path: {doc.path}\n\nhelp_text:\n{doc.help_text}\n"
     try:

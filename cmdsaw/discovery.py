@@ -8,7 +8,7 @@ from .constants import DEFAULT_TIMEOUT, DEFAULT_MAX_DEPTH, DEFAULT_CONCURRENCY, 
 from .runner import try_help, try_version, now_iso
 from .utils import which_or_raise
 
-def _review_subcommands(discovered: List[str], root_cmd: str, help_text: str = None, model_name: str = None, cache_getset: tuple = None) -> List[str]:
+def _review_subcommands(discovered: List[str], root_cmd: str, help_text: str = None, model_name: str = None, provider: str = "ollama", temperature: float = 0.0, google_api_key: str = None, cache_getset: tuple = None) -> List[str]:
     """
     Interactive review of discovered subcommands.
     
@@ -23,6 +23,12 @@ def _review_subcommands(discovered: List[str], root_cmd: str, help_text: str = N
     :type help_text: str
     :param model_name: LLM model name for re-parsing
     :type model_name: str
+    :param provider: LLM provider to use ('ollama' or 'google')
+    :type provider: str
+    :param temperature: Model temperature for re-parsing
+    :type temperature: float
+    :param google_api_key: Google API key for re-parsing
+    :type google_api_key: str
     :param cache_getset: Cache functions tuple for re-parsing
     :type cache_getset: tuple
     :return: Reviewed and modified list of subcommands
@@ -105,6 +111,9 @@ def _review_subcommands(discovered: List[str], root_cmd: str, help_text: str = N
             try:
                 reparsed_doc = parse_command_help_with_emphasis(
                     model_name=model_name,
+                    provider=provider,
+                    temperature=temperature,
+                    google_api_key=google_api_key,
                     command_path=root_cmd,
                     help_text=help_text,
                     retries=2,
@@ -130,6 +139,9 @@ def build_tree(
     *,
     root_cmd: str,
     model_name: str,
+    provider: str = "ollama",
+    temperature: float = 0.0,
+    google_api_key: Optional[str] = None,
     timeout: int = DEFAULT_TIMEOUT,
     max_depth: int = DEFAULT_MAX_DEPTH,
     env: Optional[Mapping[str,str]] = None,
@@ -147,8 +159,14 @@ def build_tree(
 
     :param root_cmd: Name of the root command to inspect
     :type root_cmd: str
-    :param model_name: Ollama model name to use for parsing
+    :param model_name: Model name to use for parsing
     :type model_name: str
+    :param provider: LLM provider to use ('ollama' or 'google')
+    :type provider: str
+    :param temperature: Model temperature (0.0 = deterministic)
+    :type temperature: float
+    :param google_api_key: Google API key (required for Google provider)
+    :type google_api_key: Optional[str]
     :param timeout: Per-invocation timeout in seconds
     :type timeout: int
     :param max_depth: Maximum recursion depth for subcommands
@@ -186,6 +204,9 @@ def build_tree(
     print(f"\nParsing root command with LLM...")
     root_doc: CommandDoc = parse_command_help(
         model_name=model_name,
+        provider=provider,
+        temperature=temperature,
+        google_api_key=google_api_key,
         command_path=root_cmd,
         help_text=help_text,
         retries=2,
@@ -206,6 +227,9 @@ def build_tree(
             root_cmd,
             help_text=help_text,
             model_name=model_name,
+            provider=provider,
+            temperature=temperature,
+            google_api_key=google_api_key,
             cache_getset=cache_getset
         )
     
@@ -220,6 +244,9 @@ def build_tree(
         help_t, _ = try_help([bin_] + parts[1:], help_flags, timeout=timeout, env=env, cwd=cwd)
         doc = parse_command_help(
             model_name=model_name,
+            provider=provider,
+            temperature=temperature,
+            google_api_key=google_api_key,
             command_path=path,
             help_text=help_t,
             retries=2,
