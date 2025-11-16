@@ -6,7 +6,7 @@ from .constants import DEFAULT_MODEL, DEFAULT_TIMEOUT, DEFAULT_MAX_DEPTH, DEFAUL
 from .discovery import build_tree
 from .serialize import to_json, write_json
 from .wdl import emit_wdl
-from .json_review import review_json_interactive, llm_double_check
+from .json_review import review_json_interactive, llm_double_check as perform_llm_double_check
 
 @click.command()
 @click.option("--command", required=True, help="Root command to inspect, e.g. samtools")
@@ -122,7 +122,7 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
     
     # Apply LLM double-check if requested
     if llm_double_check:
-        result = llm_double_check(result, model, provider, temperature, google_api_key, all_docs)
+        result = perform_llm_double_check(result, model, provider, temperature, google_api_key, all_docs)
     
     # Apply interactive review if requested
     if review_json:

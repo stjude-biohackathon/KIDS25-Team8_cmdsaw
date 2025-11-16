@@ -113,6 +113,48 @@ This opens an interactive interface where you can:
 - **[e]** Edit the complete list manually
 - **[p]** Re-parse with emphasized LLM prompt
 
+### JSON Review and Validation
+
+#### Interactive JSON Review
+
+Use `--review-json` to manually review and correct the final JSON output before saving:
+
+```bash
+cmdsaw --command samtools --model gemma2:12b --review-json
+```
+
+This opens an interactive interface where you can:
+- **[a]** Accept the JSON as-is and continue
+- **[v]** View the complete JSON output
+- **[f]** Request the LLM to fix specific issues you identify
+- **[e]** Exit without saving
+
+When you select **[f]**, you can describe issues like:
+- "Add missing default values for all options"
+- "Fix the type of --threads to int"
+- "Add descriptions for positional arguments"
+
+#### Automatic LLM Double-Check
+
+Use `--llm-double-check` to automatically verify and correct the parsed JSON:
+
+```bash
+cmdsaw --command samtools --model gemma2:12b --llm-double-check
+```
+
+This feature:
+- Automatically compares parsed JSON against original help text
+- Identifies missing or incorrect parameters
+- Fixes type mismatches and missing descriptions
+- Ensures all subcommands from help text are included
+- Reports summary of any changes made
+
+**You can combine both flags:**
+```bash
+cmdsaw --command docker --llm-double-check --review-json
+```
+This will first automatically verify the JSON, then let you review it interactively.
+
 ### Advanced Options
 
 ```bash
@@ -122,7 +164,8 @@ cmdsaw --command docker \
     --wdl-out docker.wdl \
     --max-depth 2 \
     --concurrency 8 \
-    --review-subcommands
+    --review-subcommands \
+    --llm-double-check
 ```
 
 ## Output
@@ -195,6 +238,9 @@ task samtools_view {
 ### Interactive Features
 
 - **Human Review**: Verify discovered subcommands before processing
+- **JSON Review**: Manually review and correct final JSON output before saving
+- **LLM Double-Check**: Automatically verify and fix parsed JSON against original help text
+- **LLM-Assisted Fixes**: Request LLM to fix specific issues you identify
 - **Re-parsing**: Request LLM to re-analyze with emphasis on completeness
 - **Progress Messages**: Clear console output showing what's happening
 
@@ -220,9 +266,26 @@ cmdsaw --command kubectl \
     --max-depth 3 \
     --concurrency 8 \
     --review-subcommands \
+    --llm-double-check \
     --output kubectl.json \
     --wdl-out kubectl.wdl
 ```
+
+### Analyze with Interactive Review
+
+```bash
+cmdsaw --command samtools \
+    --model gemma2:12b \
+    --llm-double-check \
+    --review-json \
+    --output samtools.json
+```
+
+This will:
+1. Parse samtools and all subcommands
+2. Automatically verify and fix the JSON
+3. Let you review and make additional corrections
+4. Save the final verified JSON
 
 ### Analyze with Custom Environment
 
@@ -248,6 +311,14 @@ If you get connection errors:
 If subcommands are missing:
 1. Use `--review-subcommands` to manually verify
 2. Try the **[p]** option to re-parse with emphasis
+
+### Inaccurate Parameter Parsing
+
+If parameters are missing or incorrect:
+1. Use `--llm-double-check` to automatically verify and fix
+2. Use `--review-json` to manually review and request fixes
+3. Try a different model (e.g., `deepseek-r1:14b`)
+4. Combine both: `--llm-double-check --review-json`
 3. Use a more capable model like `deepseek-r1:14b`
 
 ### Slow Performance
