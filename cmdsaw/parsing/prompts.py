@@ -3,6 +3,7 @@ SYSTEM_PROMPT = """You convert raw CLI help text into a structured JSON object f
 Rules:
 - Output MUST be valid JSON matching the provided schema.
 - Return ALL parameters/options (other than `--help` and `--version`).
+- Keep short arguments as-is (e.g. `-o` remains `-o`).
 - Do not invent items.
 - Types: INT, FLOAT, BOOL, PATH/FILE/DIR -> 'path' or 'str' if unclear.
 - Flags have no value.
