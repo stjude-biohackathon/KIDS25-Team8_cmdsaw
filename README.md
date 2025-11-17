@@ -17,9 +17,13 @@ This automation eliminates the tedious manual work of documenting CLI tools and 
 
 ## Requirements
 
-### Ollama (Required)
+### LLM Provider Options
 
-`cmdsaw` requires [Ollama](https://ollama.ai/) to be installed and running locally. Ollama provides the LLM inference engine that powers the help text parsing.
+`cmdsaw` supports two LLM providers:
+
+#### 1. Ollama (Local, Default)
+
+[Ollama](https://ollama.ai/) provides local LLM inference. No API keys or internet connection required for inference.
 
 **Install Ollama:**
 ```bash
@@ -38,11 +42,11 @@ curl -fsSL https://ollama.ai/install.sh | sh
 ollama serve
 ```
 
-### Recommended Models
+**Recommended Models:**
 
 Based on our testing, the best performing models for CLI help parsing are:
 
-- **`gemma3:12b`** - Excellent balance of speed and accuracy
+- **`gemma3:12b`** - Excellent balance of speed and accuracy (default)
 - **`deepseek-r1:14b`** - High accuracy, slightly slower
 
 Pull a model before using cmdsaw:
@@ -53,6 +57,44 @@ ollama pull deepseek-r1:14b
 ```
 
 Other models like `llama3.2`, `qwen3`, and `mistral` also work but may have varying accuracy.
+
+#### 2. Google Gemini API (Cloud, Recommended for Complex Tools)
+
+The Google Gemini API is **free** (with rate limits) and provides excellent accuracy for complex command-line tools.
+
+**Advantages:**
+- ✅ Free tier with generous limits
+- ✅ No local GPU required
+- ✅ Excellent accuracy on complex help text
+- ✅ Faster for tools with many subcommands
+
+**Setup:**
+1. Get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Set the environment variable:
+   ```bash
+   export GOOGLE_API_KEY="your-api-key-here"
+   ```
+3. Use the `--provider google` flag
+
+**Rate Limits:**
+- Free tier: 15 requests per minute, 1500 requests per day
+- For large tools with many subcommands, you may need to adjust `--concurrency` to avoid hitting rate limits
+
+**Example Usage:**
+```bash
+# Using Google Gemini for a complex tool
+cmdsaw --command kubectl \
+    --provider google \
+    --model gemini-2.0-flash-exp \
+    --concurrency 2 \
+    --max-depth 2
+```
+
+**Recommended for:**
+- Tools with 20+ subcommands
+- Complex nested command structures (kubectl, docker, git)
+- When local GPU resources are limited
+- Production workflows requiring highest accuracy
 
 ## Installation
 
@@ -134,26 +176,37 @@ When you select **[f]**, you can describe issues like:
 - "Fix the type of --threads to int"
 - "Add descriptions for positional arguments"
 
-#### Automatic LLM Double-Check
+#### Automatic LLM Double-Check (Enabled by Default)
 
-Use `--llm-double-check` to automatically verify and correct the parsed JSON:
+**cmdsaw automatically verifies and corrects parsed JSON** by comparing it against the original help text. This happens by default before saving.
 
-```bash
-cmdsaw --command samtools --model gemma2:12b --llm-double-check
-```
-
-This feature:
-- Automatically compares parsed JSON against original help text
+**What it does:**
+- Compares parsed JSON against original help text
 - Identifies missing or incorrect parameters
 - Fixes type mismatches and missing descriptions
 - Ensures all subcommands from help text are included
 - Reports summary of any changes made
 
-**You can combine both flags:**
+**To disable automatic verification:**
 ```bash
-cmdsaw --command docker --llm-double-check --review-json
+cmdsaw --command samtools --no-llm-double-check
 ```
-This will first automatically verify the JSON, then let you review it interactively.
+
+**Recommended approach for complex tools:**
+Use automatic verification with manual review:
+```bash
+cmdsaw --command kubectl --review-json
+```
+This will first automatically verify the JSON (default), then let you review it interactively.
+
+**For complex tools with many subcommands, consider using Google Gemini API:**
+```bash
+cmdsaw --command docker \
+    --provider google \
+    --model gemini-2.0-flash-exp \
+    --concurrency 2 \
+    --review-json
+```
 
 ### Advanced Options
 
@@ -164,8 +217,20 @@ cmdsaw --command docker \
     --wdl-out docker.wdl \
     --max-depth 2 \
     --concurrency 8 \
-    --review-subcommands \
-    --llm-double-check
+    --review-subcommands
+```
+
+**For complex tools, use Google Gemini API for best results:**
+```bash
+cmdsaw --command kubectl \
+    --provider google \
+    --model gemini-2.0-flash-exp \
+    --max-depth 3 \
+    --concurrency 2 \
+    --review-json
+```
+
+**Note:** The free Google API tier has rate limits (15 requests/minute). Reduce `--concurrency` if you hit limits.
 ```
 
 ## Output
@@ -237,12 +302,13 @@ task samtools_view {
 
 ### Interactive Features
 
+- **Automatic Double-Check**: Enabled by default - verifies and fixes parsed JSON against original help text
 - **Human Review**: Verify discovered subcommands before processing
 - **JSON Review**: Manually review and correct final JSON output before saving
-- **LLM Double-Check**: Automatically verify and fix parsed JSON against original help text
 - **LLM-Assisted Fixes**: Request LLM to fix specific issues you identify
 - **Re-parsing**: Request LLM to re-analyze with emphasis on completeness
 - **Progress Messages**: Clear console output showing what's happening
+- **Multi-Provider Support**: Use local Ollama or free Google Gemini API
 
 ## Planned Features
 
@@ -260,13 +326,25 @@ cmdsaw --command grep --model gemma2:12b --output grep.json
 
 ### Analyze a Complex Tool with Many Subcommands
 
+**Using Ollama (local):**
 ```bash
 cmdsaw --command kubectl \
     --model deepseek-r1:14b \
     --max-depth 3 \
     --concurrency 8 \
     --review-subcommands \
-    --llm-double-check \
+    --output kubectl.json \
+    --wdl-out kubectl.wdl
+```
+
+**Using Google Gemini (recommended for complex tools):**
+```bash
+cmdsaw --command kubectl \
+    --provider google \
+    --model gemini-2.0-flash-exp \
+    --max-depth 3 \
+    --concurrency 2 \
+    --review-json \
     --output kubectl.json \
     --wdl-out kubectl.wdl
 ```
@@ -276,16 +354,24 @@ cmdsaw --command kubectl \
 ```bash
 cmdsaw --command samtools \
     --model gemma2:12b \
-    --llm-double-check \
     --review-json \
     --output samtools.json
 ```
 
 This will:
 1. Parse samtools and all subcommands
-2. Automatically verify and fix the JSON
+2. Automatically verify and fix the JSON (default behavior)
 3. Let you review and make additional corrections
 4. Save the final verified JSON
+
+### Disable Automatic Verification
+
+If you want to skip the automatic double-check (not recommended):
+```bash
+cmdsaw --command simple-tool \
+    --no-llm-double-check \
+    --output output.json
+```
 
 ### Analyze with Custom Environment
 
@@ -315,11 +401,18 @@ If subcommands are missing:
 ### Inaccurate Parameter Parsing
 
 If parameters are missing or incorrect:
-1. Use `--llm-double-check` to automatically verify and fix
-2. Use `--review-json` to manually review and request fixes
-3. Try a different model (e.g., `deepseek-r1:14b`)
-4. Combine both: `--llm-double-check --review-json`
-3. Use a more capable model like `deepseek-r1:14b`
+1. The automatic double-check (enabled by default) should fix most issues
+2. Use `--review-json` to manually review and request additional fixes
+3. Try a different model (e.g., `deepseek-r1:14b` for Ollama, or `gemini-2.0-flash-exp` for Google)
+4. For complex tools, consider using Google Gemini API: `--provider google`
+
+### Google API Rate Limits
+
+If you hit Google API rate limits (free tier: 15 requests/minute):
+1. Reduce `--concurrency` to 1 or 2: `--concurrency 2`
+2. The tool will automatically retry failed requests
+3. For large tools, process in batches using `--max-depth 1` first
+4. Consider upgrading to a paid tier for higher limits
 
 ### Slow Performance
 
