@@ -63,10 +63,10 @@ Other models like `llama3.2`, `qwen3`, and `mistral` also work but may have vary
 The Google Gemini API is **free** (with rate limits) and provides excellent accuracy for complex command-line tools.
 
 **Advantages:**
-- ✅ Free tier with generous limits
-- ✅ No local GPU required
-- ✅ Excellent accuracy on complex help text
-- ✅ Faster for tools with many subcommands
+- Free tier with generous limits (10 requests per minute, 250k tokens per minute, and 250 requests per day)
+- No local GPU required
+- Excellent accuracy on complex help text
+- Faster for tools with many subcommands
 
 **Setup:**
 1. Get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
@@ -94,7 +94,6 @@ cmdsaw --command kubectl \
 - Tools with 20+ subcommands
 - Complex nested command structures (kubectl, docker, git)
 - When local GPU resources are limited
-- Production workflows requiring highest accuracy
 
 ## Installation
 
@@ -114,7 +113,7 @@ pip install -e .
 Analyze a command and generate WDL tasks:
 
 ```bash
-cmdsaw --command samtools --model gemma2:12b --output samtools.json --wdl-out samtools.wdl
+cmdsaw --command samtools --model gemma3:12b --output samtools.json --wdl-out samtools.wdl
 ```
 
 This will:
@@ -134,10 +133,10 @@ cmdsaw --command <tool-name> [OPTIONS]
 ### Common Options
 
 - `--command <name>` - Command to analyze (required)
-- `--model <name>` - Ollama model to use (default: llama3.2)
+- `--model <name>` - Ollama model to use (default: gemma3:12b)
 - `--output <file>` - Save JSON documentation to file
 - `--wdl-out <file>` - Save WDL tasks to file
-- `--max-depth <n>` - Maximum subcommand recursion depth (default: 3)
+- `--max-depth <n>` - Maximum subcommand recursion depth (default: 1)
 - `--concurrency <n>` - Parallel subcommand parsing (default: 4)
 
 ### Interactive Subcommand Review
@@ -145,7 +144,7 @@ cmdsaw --command <tool-name> [OPTIONS]
 Use `--review-subcommands` to manually verify and correct discovered subcommands:
 
 ```bash
-cmdsaw --command kubectl --model gemma2:12b --review-subcommands
+cmdsaw --command kubectl --model gemma3:12b --review-subcommands
 ```
 
 This opens an interactive interface where you can:
@@ -159,10 +158,10 @@ This opens an interactive interface where you can:
 
 #### Interactive JSON Review
 
-Use `--review-json` to manually review and correct the final JSON output before saving:
+Use `--review-json` to manually review and correct the final JSON output before saving (and WDL task generation):
 
 ```bash
-cmdsaw --command samtools --model gemma2:12b --review-json
+cmdsaw --command samtools --model gemma3:12b --review-json
 ```
 
 This opens an interactive interface where you can:
@@ -199,39 +198,6 @@ cmdsaw --command kubectl --review-json
 ```
 This will first automatically verify the JSON (default), then let you review it interactively.
 
-**For complex tools with many subcommands, consider using Google Gemini API:**
-```bash
-cmdsaw --command docker \
-    --provider google \
-    --model gemini-2.0-flash-exp \
-    --concurrency 2 \
-    --review-json
-```
-
-### Advanced Options
-
-```bash
-cmdsaw --command docker \
-    --model deepseek-r1:14b \
-    --output docker.json \
-    --wdl-out docker.wdl \
-    --max-depth 2 \
-    --concurrency 8 \
-    --review-subcommands
-```
-
-**For complex tools, use Google Gemini API for best results:**
-```bash
-cmdsaw --command kubectl \
-    --provider google \
-    --model gemini-2.0-flash-exp \
-    --max-depth 3 \
-    --concurrency 2 \
-    --review-json
-```
-
-**Note:** The free Google API tier has rate limits (15 requests/minute). Reduce `--concurrency` if you hit limits.
-```
 
 ## Output
 
@@ -303,8 +269,7 @@ task samtools_view {
 ### Interactive Features
 
 - **Automatic Double-Check**: Enabled by default - verifies and fixes parsed JSON against original help text
-- **Human Review**: Verify discovered subcommands before processing
-- **JSON Review**: Manually review and correct final JSON output before saving
+- **Human-in-the-loop Review**: Verify discovered subcommands before processing or final JSON prior to output generation
 - **LLM-Assisted Fixes**: Request LLM to fix specific issues you identify
 - **Re-parsing**: Request LLM to re-analyze with emphasis on completeness
 - **Progress Messages**: Clear console output showing what's happening
@@ -332,55 +297,17 @@ cmdsaw --command kubectl \
     --model deepseek-r1:14b \
     --max-depth 3 \
     --concurrency 8 \
-    --review-subcommands \
-    --output kubectl.json \
-    --wdl-out kubectl.wdl
+    --review-subcommands 
 ```
 
 **Using Google Gemini (recommended for complex tools):**
 ```bash
 cmdsaw --command kubectl \
     --provider google \
-    --model gemini-2.0-flash-exp \
+    --model gemini-2.5-flash \
     --max-depth 3 \
     --concurrency 2 \
-    --review-json \
-    --output kubectl.json \
-    --wdl-out kubectl.wdl
-```
-
-### Analyze with Interactive Review
-
-```bash
-cmdsaw --command samtools \
-    --model gemma2:12b \
-    --review-json \
-    --output samtools.json
-```
-
-This will:
-1. Parse samtools and all subcommands
-2. Automatically verify and fix the JSON (default behavior)
-3. Let you review and make additional corrections
-4. Save the final verified JSON
-
-### Disable Automatic Verification
-
-If you want to skip the automatic double-check (not recommended):
-```bash
-cmdsaw --command simple-tool \
-    --no-llm-double-check \
-    --output output.json
-```
-
-### Analyze with Custom Environment
-
-```bash
-cmdsaw --command myapp \
-    --model gemma2:12b \
-    --workdir /path/to/app \
-    --env PATH=/custom/path \
-    --output myapp.json
+    --review-json 
 ```
 
 ## Troubleshooting
@@ -408,7 +335,7 @@ If parameters are missing or incorrect:
 
 ### Google API Rate Limits
 
-If you hit Google API rate limits (free tier: 15 requests/minute):
+If you hit Google API rate limits (free tier: 10 requests/minute):
 1. Reduce `--concurrency` to 1 or 2: `--concurrency 2`
 2. The tool will automatically retry failed requests
 3. For large tools, process in batches using `--max-depth 1` first
@@ -417,7 +344,7 @@ If you hit Google API rate limits (free tier: 15 requests/minute):
 ### Slow Performance
 
 To speed up analysis:
-1. Increase `--concurrency` (e.g., `--concurrency 16`)
+1. Increase `--concurrency`, especially if using an API (e.g., `--concurrency 4`)
 2. Enable caching (enabled by default, disable with `--no-llm-cache`)
 3. Use a smaller model like `llama3.2` for faster (but less accurate) results
 
