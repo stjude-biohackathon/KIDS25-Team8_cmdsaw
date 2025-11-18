@@ -13,7 +13,30 @@
 3. **Generates Workflows**: Creates WDL 1.2 task definitions with resource estimates
 4. **Outputs Structured Data**: Produces JSON documentation of the entire command structure
 
-This automation eliminates the tedious manual work of documenting CLI tools and writing workflow task wrappers.
+This automation is meant to eliminate the tedious manual work of documenting CLI tools and writing workflow task wrappers.
+
+## Features
+
+### Intelligent Parsing
+
+- **LLM-Powered**: Uses advanced language models to understand CLI help text
+- **Recursive Discovery**: Automatically finds all subcommands and nested commands
+- **Parameter Detection**: Identifies options, flags, positionals, types, and defaults
+- **Resource Estimation**: Predicts CPU and memory requirements for WDL tasks
+- **Automatic Container Usage**: Uses the BioContainers registry for container images/bioconda (Docker, Singularity (Apptainer), bioconda)
+
+### Filtering and Optimization
+
+- **Smart Filtering**: Excludes `--help` & `--version` options from workflow tasks...supposedly
+- **Subcommand Detection**: Skips commands that are meaningless without subcommands
+- **Cache Support**: Caches LLM responses to speed up repeated analyses
+
+### Interactive Features
+
+- **Automatic Double-Check**: Enabled by default - verifies and fixes parsed JSON against original help text
+- **Human-in-the-loop Review**: Verify discovered subcommands before processing or final JSON prior to output generation
+- **LLM-Assisted Fixes**: Request LLM to fix specific issues you identify
+- **Multi-Provider Support**: Use local Ollama or free Google Gemini API. Will probably add OpenAI/Anthropic in the future, though the goal is to minimize reliance on cloud APIs and provide local capabilities.
 
 ## Requirements
 
@@ -76,19 +99,6 @@ The Google Gemini API is **free** (with rate limits) and provides excellent accu
    ```
 3. Use the `--provider google` flag
 
-**Rate Limits:**
-- Free tier: 15 requests per minute, 1500 requests per day
-- For large tools with many subcommands, you may need to adjust `--concurrency` to avoid hitting rate limits
-
-**Example Usage:**
-```bash
-# Using Google Gemini for a complex tool
-cmdsaw --command kubectl \
-    --provider google \
-    --model gemini-2.0-flash-exp \
-    --concurrency 2 \
-    --max-depth 2
-```
 
 **Recommended for:**
 - Tools with 20+ subcommands
@@ -98,7 +108,8 @@ cmdsaw --command kubectl \
 ## Installation
 
 ```bash
-pip install cmdsaw
+# Eventually...
+# pip install cmdsaw
 ```
 
 Or install from source:
@@ -113,7 +124,7 @@ pip install -e .
 Analyze a command and generate WDL tasks:
 
 ```bash
-cmdsaw --command samtools --model gemma3:12b --output samtools.json --wdl-out samtools.wdl
+cmdsaw --command samtools --model gemma3:12b
 ```
 
 This will:
@@ -249,66 +260,12 @@ task samtools_view {
 }
 ```
 
-**Note:** The `--help` parameter is automatically excluded from generated tasks as it's meant for interactive use only.
-
-## Features
-
-### Intelligent Parsing
-
-- **LLM-Powered**: Uses advanced language models to understand CLI help text
-- **Recursive Discovery**: Automatically finds all subcommands and nested commands
-- **Parameter Detection**: Identifies options, flags, positionals, types, and defaults
-- **Resource Estimation**: Predicts CPU and memory requirements for WDL tasks
-
-### Filtering and Optimization
-
-- **Smart Filtering**: Excludes `--help` options from workflow tasks
-- **Subcommand Detection**: Skips commands that are meaningless without subcommands
-- **Cache Support**: Caches LLM responses to speed up repeated analyses
-
-### Interactive Features
-
-- **Automatic Double-Check**: Enabled by default - verifies and fixes parsed JSON against original help text
-- **Human-in-the-loop Review**: Verify discovered subcommands before processing or final JSON prior to output generation
-- **LLM-Assisted Fixes**: Request LLM to fix specific issues you identify
-- **Re-parsing**: Request LLM to re-analyze with emphasis on completeness
-- **Progress Messages**: Clear console output showing what's happening
-- **Multi-Provider Support**: Use local Ollama or free Google Gemini API
-
 ## Planned Features
 
 ### Nextflow Process Generation
 
 Support for generating Nextflow process definitions is planned for a future release. This will complement the existing WDL support and enable cmdsaw to serve multiple workflow platforms.
 
-## Examples
-
-### Analyze a Simple Tool
-
-```bash
-cmdsaw --command grep --model gemma2:12b --output grep.json
-```
-
-### Analyze a Complex Tool with Many Subcommands
-
-**Using Ollama (local):**
-```bash
-cmdsaw --command kubectl \
-    --model deepseek-r1:14b \
-    --max-depth 3 \
-    --concurrency 8 \
-    --review-subcommands 
-```
-
-**Using Google Gemini (recommended for complex tools):**
-```bash
-cmdsaw --command kubectl \
-    --provider google \
-    --model gemini-2.5-flash \
-    --max-depth 3 \
-    --concurrency 2 \
-    --review-json 
-```
 
 ## Troubleshooting
 
@@ -328,10 +285,10 @@ If subcommands are missing:
 ### Inaccurate Parameter Parsing
 
 If parameters are missing or incorrect:
-1. The automatic double-check (enabled by default) should fix most issues
-2. Use `--review-json` to manually review and request additional fixes
-3. Try a different model (e.g., `deepseek-r1:14b` for Ollama, or `gemini-2.0-flash-exp` for Google)
-4. For complex tools, consider using Google Gemini API: `--provider google`
+1. The automatic double-check (enabled by default) should fix most issues, but can also sometimes introduce them.
+2. Use `--review-json` to manually review and request additional fixes.
+3. Try a different model (e.g., `deepseek-r1:14b` for Ollama, or `gemini-2.0-flash-exp` for Google).
+4. For complex tools, consider using Google Gemini API: `--provider google`.
 
 ### Google API Rate Limits
 
