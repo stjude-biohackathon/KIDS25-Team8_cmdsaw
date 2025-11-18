@@ -17,9 +17,13 @@ This automation eliminates the tedious manual work of documenting CLI tools and 
 
 ## Requirements
 
-### Ollama (Required)
+### LLM Provider Options
 
-`cmdsaw` requires [Ollama](https://ollama.ai/) to be installed and running locally. Ollama provides the LLM inference engine that powers the help text parsing.
+`cmdsaw` supports two LLM providers:
+
+#### 1. Ollama (Local, Default)
+
+[Ollama](https://ollama.ai/) provides local LLM inference. No API keys or internet connection required for inference.
 
 **Install Ollama:**
 ```bash
@@ -38,11 +42,11 @@ curl -fsSL https://ollama.ai/install.sh | sh
 ollama serve
 ```
 
-### Recommended Models
+**Recommended Models:**
 
 Based on our testing, the best performing models for CLI help parsing are:
 
-- **`gemma3:12b`** - Excellent balance of speed and accuracy
+- **`gemma3:12b`** - Excellent balance of speed and accuracy (default)
 - **`deepseek-r1:14b`** - High accuracy, slightly slower
 
 Pull a model before using cmdsaw:
@@ -53,6 +57,43 @@ ollama pull deepseek-r1:14b
 ```
 
 Other models like `llama3.2`, `qwen3`, and `mistral` also work but may have varying accuracy.
+
+#### 2. Google Gemini API (Cloud, Recommended for Complex Tools)
+
+The Google Gemini API is **free** (with rate limits) and provides excellent accuracy for complex command-line tools.
+
+**Advantages:**
+- Free tier with generous limits (10 requests per minute, 250k tokens per minute, and 250 requests per day)
+- No local GPU required
+- Excellent accuracy on complex help text
+- Faster for tools with many subcommands
+
+**Setup:**
+1. Get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Set the environment variable:
+   ```bash
+   export GOOGLE_API_KEY="your-api-key-here"
+   ```
+3. Use the `--provider google` flag
+
+**Rate Limits:**
+- Free tier: 15 requests per minute, 1500 requests per day
+- For large tools with many subcommands, you may need to adjust `--concurrency` to avoid hitting rate limits
+
+**Example Usage:**
+```bash
+# Using Google Gemini for a complex tool
+cmdsaw --command kubectl \
+    --provider google \
+    --model gemini-2.0-flash-exp \
+    --concurrency 2 \
+    --max-depth 2
+```
+
+**Recommended for:**
+- Tools with 20+ subcommands
+- Complex nested command structures (kubectl, docker, git)
+- When local GPU resources are limited
 
 ## Installation
 
@@ -72,7 +113,7 @@ pip install -e .
 Analyze a command and generate WDL tasks:
 
 ```bash
-cmdsaw --command samtools --model gemma2:12b --output samtools.json --wdl-out samtools.wdl
+cmdsaw --command samtools --model gemma3:12b --output samtools.json --wdl-out samtools.wdl
 ```
 
 This will:
@@ -92,10 +133,10 @@ cmdsaw --command <tool-name> [OPTIONS]
 ### Common Options
 
 - `--command <name>` - Command to analyze (required)
-- `--model <name>` - Ollama model to use (default: llama3.2)
+- `--model <name>` - Ollama model to use (default: gemma3:12b)
 - `--output <file>` - Save JSON documentation to file
 - `--wdl-out <file>` - Save WDL tasks to file
-- `--max-depth <n>` - Maximum subcommand recursion depth (default: 3)
+- `--max-depth <n>` - Maximum subcommand recursion depth (default: 1)
 - `--concurrency <n>` - Parallel subcommand parsing (default: 4)
 
 ### Interactive Subcommand Review
@@ -103,7 +144,7 @@ cmdsaw --command <tool-name> [OPTIONS]
 Use `--review-subcommands` to manually verify and correct discovered subcommands:
 
 ```bash
-cmdsaw --command kubectl --model gemma2:12b --review-subcommands
+cmdsaw --command kubectl --model gemma3:12b --review-subcommands
 ```
 
 This opens an interactive interface where you can:
@@ -113,17 +154,50 @@ This opens an interactive interface where you can:
 - **[e]** Edit the complete list manually
 - **[p]** Re-parse with emphasized LLM prompt
 
-### Advanced Options
+### JSON Review and Validation
+
+#### Interactive JSON Review
+
+Use `--review-json` to manually review and correct the final JSON output before saving (and WDL task generation):
 
 ```bash
-cmdsaw --command docker \
-    --model deepseek-r1:14b \
-    --output docker.json \
-    --wdl-out docker.wdl \
-    --max-depth 2 \
-    --concurrency 8 \
-    --review-subcommands
+cmdsaw --command samtools --model gemma3:12b --review-json
 ```
+
+This opens an interactive interface where you can:
+- **[a]** Accept the JSON as-is and continue
+- **[v]** View the complete JSON output
+- **[f]** Request the LLM to fix specific issues you identify
+- **[e]** Exit without saving
+
+When you select **[f]**, you can describe issues like:
+- "Add missing default values for all options"
+- "Fix the type of --threads to int"
+- "Add descriptions for positional arguments"
+
+#### Automatic LLM Double-Check (Enabled by Default)
+
+**cmdsaw automatically verifies and corrects parsed JSON** by comparing it against the original help text. This happens by default before saving.
+
+**What it does:**
+- Compares parsed JSON against original help text
+- Identifies missing or incorrect parameters
+- Fixes type mismatches and missing descriptions
+- Ensures all subcommands from help text are included
+- Reports summary of any changes made
+
+**To disable automatic verification:**
+```bash
+cmdsaw --command samtools --no-llm-double-check
+```
+
+**Recommended approach for complex tools:**
+Use automatic verification with manual review:
+```bash
+cmdsaw --command kubectl --review-json
+```
+This will first automatically verify the JSON (default), then let you review it interactively.
+
 
 ## Output
 
@@ -194,9 +268,12 @@ task samtools_view {
 
 ### Interactive Features
 
-- **Human Review**: Verify discovered subcommands before processing
+- **Automatic Double-Check**: Enabled by default - verifies and fixes parsed JSON against original help text
+- **Human-in-the-loop Review**: Verify discovered subcommands before processing or final JSON prior to output generation
+- **LLM-Assisted Fixes**: Request LLM to fix specific issues you identify
 - **Re-parsing**: Request LLM to re-analyze with emphasis on completeness
 - **Progress Messages**: Clear console output showing what's happening
+- **Multi-Provider Support**: Use local Ollama or free Google Gemini API
 
 ## Planned Features
 
@@ -214,24 +291,23 @@ cmdsaw --command grep --model gemma2:12b --output grep.json
 
 ### Analyze a Complex Tool with Many Subcommands
 
+**Using Ollama (local):**
 ```bash
 cmdsaw --command kubectl \
     --model deepseek-r1:14b \
     --max-depth 3 \
     --concurrency 8 \
-    --review-subcommands \
-    --output kubectl.json \
-    --wdl-out kubectl.wdl
+    --review-subcommands 
 ```
 
-### Analyze with Custom Environment
-
+**Using Google Gemini (recommended for complex tools):**
 ```bash
-cmdsaw --command myapp \
-    --model gemma2:12b \
-    --workdir /path/to/app \
-    --env PATH=/custom/path \
-    --output myapp.json
+cmdsaw --command kubectl \
+    --provider google \
+    --model gemini-2.5-flash \
+    --max-depth 3 \
+    --concurrency 2 \
+    --review-json 
 ```
 
 ## Troubleshooting
@@ -248,12 +324,27 @@ If you get connection errors:
 If subcommands are missing:
 1. Use `--review-subcommands` to manually verify
 2. Try the **[p]** option to re-parse with emphasis
-3. Use a more capable model like `deepseek-r1:14b`
+
+### Inaccurate Parameter Parsing
+
+If parameters are missing or incorrect:
+1. The automatic double-check (enabled by default) should fix most issues
+2. Use `--review-json` to manually review and request additional fixes
+3. Try a different model (e.g., `deepseek-r1:14b` for Ollama, or `gemini-2.0-flash-exp` for Google)
+4. For complex tools, consider using Google Gemini API: `--provider google`
+
+### Google API Rate Limits
+
+If you hit Google API rate limits (free tier: 10 requests/minute):
+1. Reduce `--concurrency` to 1 or 2: `--concurrency 2`
+2. The tool will automatically retry failed requests
+3. For large tools, process in batches using `--max-depth 1` first
+4. Consider upgrading to a paid tier for higher limits
 
 ### Slow Performance
 
 To speed up analysis:
-1. Increase `--concurrency` (e.g., `--concurrency 16`)
+1. Increase `--concurrency`, especially if using an API (e.g., `--concurrency 4`)
 2. Enable caching (enabled by default, disable with `--no-llm-cache`)
 3. Use a smaller model like `llama3.2` for faster (but less accurate) results
 
