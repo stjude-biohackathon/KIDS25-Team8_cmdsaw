@@ -6,6 +6,7 @@ from .constants import DEFAULT_MODEL, DEFAULT_TIMEOUT, DEFAULT_MAX_DEPTH, DEFAUL
 from .discovery import build_tree
 from .serialize import to_json, write_json
 from .wdl import emit_wdl
+from .json_review import review_json_interactive, llm_double_check as perform_llm_double_check
 
 @click.command()
 @click.option("--command", required=True, help="Root command to inspect, e.g. samtools")
@@ -23,7 +24,9 @@ from .wdl import emit_wdl
 @click.option("--env", multiple=True, help="Extra env vars: KEY=VAL", metavar="KEY=VAL")
 @click.option("--no-llm-cache", is_flag=True, default=False, help="Disable on-disk LLM parse cache")
 @click.option("--review-subcommands", is_flag=True, default=False, help="Enable interactive review of discovered subcommands")
-def main(command, model, provider, temperature, google_api_key, output, wdl_out, timeout, max_depth, concurrency, help_flags, workdir, env, no_llm_cache, review_subcommands):
+@click.option("--review-json", is_flag=True, default=False, help="Enable interactive review of JSON output before saving")
+@click.option("--no-llm-double-check", is_flag=True, default=False, help="Disable automatic LLM verification of parsed JSON")
+def main(command, model, provider, temperature, google_api_key, output, wdl_out, timeout, max_depth, concurrency, help_flags, workdir, env, no_llm_cache, review_subcommands, review_json, no_llm_double_check):
     """
     Parse CLI help text using LLM and emit structured documentation.
 
@@ -61,6 +64,10 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
     :type no_llm_cache: bool
     :param review_subcommands: Whether to enable interactive review of subcommands
     :type review_subcommands: bool
+    :param review_json: Whether to enable interactive review of JSON output
+    :type review_json: bool
+    :param no_llm_double_check: Whether to disable automatic LLM verification of JSON
+    :type no_llm_double_check: bool
     :return: None
     :rtype: None
     """
@@ -112,6 +119,14 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
         click.echo("\nAll discovered subcommands:")
         for doc in all_docs[1:]:  # Skip root command
             click.echo(f"  - {doc.path}")
+    
+    # Apply LLM double-check by default (unless disabled)
+    if not no_llm_double_check:
+        result = perform_llm_double_check(result, model, provider, temperature, google_api_key, all_docs)
+    
+    # Apply interactive review if requested
+    if review_json:
+        result = review_json_interactive(result, model, provider, temperature, google_api_key, all_docs)
     
     # Set default output filenames if not provided
     version = result.tool.version or "unknown"
