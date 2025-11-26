@@ -25,7 +25,6 @@ def _parse_edam_tsv(tsv_path: str) -> Dict[str, Tuple[str, str]]:
     :param tsv_path: Path to EDAM.tsv file
     :return: Dictionary mapping extensions to (edam_id, label)
     """
-    formats = {}
     extension_map = {}
     
     try:
@@ -43,9 +42,6 @@ def _parse_edam_tsv(tsv_path: str) -> Dict[str, Tuple[str, str]]:
                 if not name:
                     continue
                 
-                # Store format info
-                formats[format_id] = name
-                
                 # Try to extract file extensions from name and synonyms
                 all_text = f"{name} {synonyms}".lower()
                 
@@ -58,8 +54,9 @@ def _parse_edam_tsv(tsv_path: str) -> Dict[str, Tuple[str, str]]:
                     elif word in ['fasta', 'fastq', 'bam', 'sam', 'vcf', 'bed', 'gff', 'gtf']:
                         extension_map[f".{word}"] = (format_id, name)
                 
-    except Exception as e:
-        print(f"Warning: Could not parse EDAM.tsv: {e}")
+    except Exception:
+        # Silently fail and use fallback mappings
+        pass
     
     return extension_map
 
@@ -154,7 +151,7 @@ _FALLBACK_MAPPINGS = {
 # Combine loaded and fallback mappings (loaded takes precedence)
 EXTENSION_TO_EDAM = {**_FALLBACK_MAPPINGS, **_EDAM_LOADED}
 
-def get_edam_format(extension: str) -> tuple[str, str] | None:
+def get_edam_format(extension: str) -> Optional[Tuple[str, str]]:
     """
     Get EDAM format ID and label for a file extension.
     
