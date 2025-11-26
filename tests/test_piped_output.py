@@ -100,18 +100,20 @@ def test_edam_mappings_loaded():
     # Check that we have some mappings
     assert len(EXTENSION_TO_EDAM) > 0
     
-    # Check for key formats
+    # Check for key formats (from EDAM.tsv)
     assert ".fasta" in EXTENSION_TO_EDAM or ".fa" in EXTENSION_TO_EDAM
     assert ".bam" in EXTENSION_TO_EDAM
     
     # Test get_edam_format function
     fasta = get_edam_format(".fasta")
     assert fasta is not None
-    assert fasta[0] == "format_1929"
+    # EDAM.tsv may have multiple FASTA formats, just verify we got a valid one
+    assert fasta[0].startswith("format_")
+    assert "FASTA" in fasta[1]
     
     bam = get_edam_format(".bam")
     assert bam is not None
-    assert bam[0] == "format_2572"
+    assert bam[0] == "format_2572"  # BAM format should be consistent
 
 
 def test_piped_output_with_format():

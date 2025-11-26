@@ -1,13 +1,14 @@
 """
-Mapping of common file extensions to EDAM format ontology terms.
+Mapping of file extensions to EDAM format ontology terms.
 Based on EDAM ontology: https://edamontology.org/
 
-This module parses the EDAM.tsv file to build format mappings, and provides
-fallback hardcoded mappings for common bioinformatics formats.
+This module parses the EDAM.tsv file to build format mappings.
+The EDAM.tsv file should be included as package data.
 """
 
 import csv
 import os
+import re
 from pathlib import Path
 from typing import Dict, Tuple, Optional
 
@@ -27,6 +28,9 @@ def _parse_edam_tsv(tsv_path: str) -> Dict[str, Tuple[str, str]]:
     """
     extension_map = {}
     
+    # Priority mapping: prefer exact format names over derived/specific formats
+    priority_formats = {}  # extension -> list of (format_id, name, priority)
+    
     try:
         with open(tsv_path, 'r', encoding='utf-8') as f:
             reader = csv.reader(f, delimiter='\t')
@@ -38,118 +42,115 @@ def _parse_edam_tsv(tsv_path: str) -> Dict[str, Tuple[str, str]]:
                 format_id = uri.split('/')[-1]
                 name = row[1].strip() if len(row) > 1 else ''
                 synonyms = row[2].strip() if len(row) > 2 else ''
+                description = row[3].strip() if len(row) > 3 else ''
                 
                 if not name:
                     continue
                 
-                # Try to extract file extensions from name and synonyms
-                all_text = f"{name} {synonyms}".lower()
+                # Combine all text fields for searching
+                all_text = f"{name} {synonyms} {description}".lower()
                 
-                # Common patterns for file extensions
-                for word in all_text.split():
-                    # Direct extensions like ".bam", ".vcf"
-                    if word.startswith('.') and len(word) > 1:
-                        extension_map[word] = (format_id, name)
-                    # Format names that match extensions
-                    elif word in ['fasta', 'fastq', 'bam', 'sam', 'vcf', 'bed', 'gff', 'gtf']:
-                        extension_map[f".{word}"] = (format_id, name)
+                # Determine priority (lower is better)
+                # Prefer simple format names over complex ones
+                priority = len(name)  # Shorter names are simpler
+                if "search" in name.lower() or "results" in name.lower():
+                    priority += 1000  # Deprioritize search/result formats
                 
-    except Exception:
-        # Silently fail and use fallback mappings
-        pass
+                # Extract extensions from various patterns
+                # Pattern 1: Direct extensions like ".bam", ".vcf"
+                extension_pattern = re.findall(r'\.([a-z0-9]{2,8})(?:\s|,|;|\)|$)', all_text)
+                for ext in extension_pattern:
+                    ext_key = f".{ext}"
+                    if ext_key not in priority_formats:
+                        priority_formats[ext_key] = []
+                    priority_formats[ext_key].append((format_id, name, priority))
+                
+                # Pattern 2: Format names that match common extensions
+                format_extensions = {
+                    'fasta': ['.fasta', '.fa', '.fna', '.ffn', '.faa', '.frn'],
+                    'fastq': ['.fastq', '.fq'],
+                    'bam': ['.bam'],
+                    'sam': ['.sam'],
+                    'vcf': ['.vcf'],
+                    'bcf': ['.bcf'],
+                    'bed': ['.bed'],
+                    'gff': ['.gff', '.gff3'],
+                    'gtf': ['.gtf'],
+                    'wig': ['.wig'],
+                    'bigwig': ['.bigwig', '.bw'],
+                    'bigbed': ['.bigbed', '.bb'],
+                    'bedgraph': ['.bedgraph'],
+                    'cram': ['.cram'],
+                    'maf': ['.maf'],
+                    'tsv': ['.tsv', '.tab'],
+                    'csv': ['.csv'],
+                    'json': ['.json'],
+                    'xml': ['.xml'],
+                    'html': ['.html', '.htm'],
+                    'pdf': ['.pdf'],
+                    'png': ['.png'],
+                    'jpeg': ['.jpg', '.jpeg'],
+                    'gif': ['.gif'],
+                    'svg': ['.svg'],
+                    'tiff': ['.tiff', '.tif'],
+                    'phylip': ['.phylip'],
+                    'nexus': ['.nexus'],
+                    'newick': ['.newick'],
+                    'stockholm': ['.stockholm'],
+                    'clustal': ['.clustal'],
+                    'pdb': ['.pdb'],
+                    'sdf': ['.sdf'],
+                    'mol': ['.mol'],
+                    'mol2': ['.mol2'],
+                    'hdf5': ['.h5', '.hdf5'],
+                    'gzip': ['.gz'],
+                    'bzip2': ['.bz2'],
+                    'zip': ['.zip'],
+                    'tar': ['.tar'],
+                }
+                
+                name_lower = name.lower()
+                for format_name, extensions in format_extensions.items():
+                    # Check if this is an exact match or contains the format name
+                    if name_lower == format_name or (format_name in name_lower and len(name_lower) < len(format_name) + 10):
+                        for ext in extensions:
+                            if ext not in priority_formats:
+                                priority_formats[ext] = []
+                            priority_formats[ext].append((format_id, name, priority))
+        
+        # Select best format for each extension (lowest priority value)
+        for ext, candidates in priority_formats.items():
+            if candidates:
+                best = min(candidates, key=lambda x: x[2])
+                extension_map[ext] = (best[0], best[1])
+                
+    except Exception as e:
+        # If EDAM.tsv cannot be parsed, raise an error
+        raise RuntimeError(
+            f"Failed to parse EDAM.tsv file. Please ensure the file is present and valid. Error: {e}"
+        )
     
     return extension_map
 
-# Try to load from EDAM.tsv
+# Load from EDAM.tsv
 _EDAM_LOADED = {}
+_edam_file_found = False
 for path in _EDAM_TSV_PATHS:
     if path.exists():
         _EDAM_LOADED = _parse_edam_tsv(str(path))
+        _edam_file_found = True
         break
 
-# Fallback/supplementary hardcoded mappings for common formats
-# Format: extension -> (edam_id, edam_label)
-_FALLBACK_MAPPINGS = {
-    # Sequence formats
-    ".fasta": ("format_1929", "FASTA"),
-    ".fa": ("format_1929", "FASTA"),
-    ".fna": ("format_1929", "FASTA"),
-    ".ffn": ("format_1929", "FASTA"),
-    ".faa": ("format_1929", "FASTA"),
-    ".frn": ("format_1929", "FASTA"),
-    ".fastq": ("format_1930", "FASTQ"),
-    ".fq": ("format_1930", "FASTQ"),
-    
-    # Alignment formats
-    ".sam": ("format_2573", "SAM"),
-    ".bam": ("format_2572", "BAM"),
-    ".cram": ("format_3462", "CRAM"),
-    ".maf": ("format_3008", "MAF"),
-    
-    # Variant formats
-    ".vcf": ("format_3016", "VCF"),
-    ".bcf": ("format_3020", "BCF"),
-    
-    # Annotation formats
-    ".gff": ("format_2305", "GFF"),
-    ".gff3": ("format_1975", "GFF3"),
-    ".gtf": ("format_2306", "GTF"),
-    ".bed": ("format_3003", "BED"),
-    ".bigbed": ("format_3004", "bigBed"),
-    ".bb": ("format_3004", "bigBed"),
-    ".bedgraph": ("format_3583", "bedGraph"),
-    ".wig": ("format_3005", "WIG"),
-    ".bigwig": ("format_3006", "bigWig"),
-    ".bw": ("format_3006", "bigWig"),
-    
-    # Tabular formats
-    ".tsv": ("format_3475", "TSV"),
-    ".tab": ("format_3475", "TSV"),
-    ".csv": ("format_3752", "CSV"),
-    ".txt": ("format_2330", "Textual format"),
-    
-    # XML/HTML formats
-    ".xml": ("format_2332", "XML"),
-    ".html": ("format_2331", "HTML"),
-    ".htm": ("format_2331", "HTML"),
-    
-    # JSON formats
-    ".json": ("format_3464", "JSON"),
-    
-    # Image formats
-    ".png": ("format_3603", "PNG"),
-    ".jpg": ("format_3579", "JPEG"),
-    ".jpeg": ("format_3579", "JPEG"),
-    ".gif": ("format_3467", "GIF"),
-    ".svg": ("format_3604", "SVG"),
-    ".tiff": ("format_3591", "TIFF"),
-    ".tif": ("format_3591", "TIFF"),
-    ".pdf": ("format_3508", "PDF"),
-    
-    # Compressed formats
-    ".gz": ("format_3989", "gzip"),
-    ".bz2": ("format_3987", "bzip2"),
-    ".zip": ("format_3987", "Zip"),
-    ".tar": ("format_3987", "tar"),
-    
-    # HDF5 formats
-    ".h5": ("format_3590", "HDF5"),
-    ".hdf5": ("format_3590", "HDF5"),
-    
-    # Bioinformatics specific
-    ".pdb": ("format_1476", "PDB"),
-    ".sdf": ("format_3814", "SDF"),
-    ".mol": ("format_3815", "MOL"),
-    ".mol2": ("format_3816", "MOL2"),
-    ".phylip": ("format_1997", "PHYLIP"),
-    ".nexus": ("format_1912", "Nexus"),
-    ".newick": ("format_1910", "Newick"),
-    ".stockholm": ("format_1961", "Stockholm"),
-    ".clustal": ("format_1982", "Clustal"),
-}
+if not _edam_file_found:
+    import warnings
+    warnings.warn(
+        "EDAM.tsv file not found. File format mappings will be unavailable. "
+        "Please ensure EDAM.tsv is included in the package.",
+        RuntimeWarning
+    )
 
-# Combine loaded and fallback mappings (loaded takes precedence)
-EXTENSION_TO_EDAM = {**_FALLBACK_MAPPINGS, **_EDAM_LOADED}
+# Use only the loaded mappings from EDAM.tsv
+EXTENSION_TO_EDAM = _EDAM_LOADED
 
 def get_edam_format(extension: str) -> Optional[Tuple[str, str]]:
     """

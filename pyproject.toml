@@ -26,3 +26,6 @@ cmdsaw = "cmdsaw.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["cmdsaw"]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"cmdsaw/parsing/EDAM.tsv" = "cmdsaw/parsing/EDAM.tsv"
