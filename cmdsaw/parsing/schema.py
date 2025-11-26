@@ -25,6 +25,7 @@ class OptionDoc(BaseModel):
     aliases: List[str] = Field(default_factory=list)
     file_role: FileRole = "none"
     file_format: Optional[FileFormat] = None
+    supports_piped_output: bool = False
 
 class PositionalDoc(BaseModel):
     name: str
@@ -35,6 +36,7 @@ class PositionalDoc(BaseModel):
     description: Optional[str] = None
     file_role: FileRole = "none"
     file_format: Optional[FileFormat] = None
+    supports_piped_output: bool = False
 
 class CommandDoc(BaseModel):
     name: str
@@ -72,3 +74,31 @@ class CmdSawResult(BaseModel):
     schema_version: str
     tool: ToolDoc
     diagnostics: ParseDiagnostics
+
+def generate_piped_output_filename(command_path: str, file_format: Optional[FileFormat] = None) -> str:
+    """
+    Generate a default output filename for piped output.
+    
+    :param command_path: Full command path (e.g., "samtools view" or "grep")
+    :type command_path: str
+    :param file_format: Optional file format to determine extension
+    :type file_format: Optional[FileFormat]
+    :return: Default output filename
+    :rtype: str
+    
+    Examples:
+        >>> generate_piped_output_filename("samtools view", FileFormat(extension=".bam"))
+        'samtools_view_output.bam'
+        >>> generate_piped_output_filename("grep")
+        'grep_output.txt'
+    """
+    # Convert command path to valid filename
+    safe_name = command_path.replace(" ", "_").replace("/", "_").replace("-", "_")
+    
+    # Determine extension
+    if file_format and file_format.extension:
+        extension = file_format.extension
+    else:
+        extension = ".txt"
+    
+    return f"{safe_name}_output{extension}"

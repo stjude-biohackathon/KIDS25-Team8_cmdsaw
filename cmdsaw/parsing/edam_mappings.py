@@ -1,11 +1,78 @@
 """
 Mapping of common file extensions to EDAM format ontology terms.
 Based on EDAM ontology: https://edamontology.org/
+
+This module parses the EDAM.tsv file to build format mappings, and provides
+fallback hardcoded mappings for common bioinformatics formats.
 """
 
-# Extension to EDAM format mapping
+import csv
+import os
+from pathlib import Path
+from typing import Dict, Tuple, Optional
+
+# Try to find EDAM.tsv in common locations
+_EDAM_TSV_PATHS = [
+    Path(__file__).parent / "EDAM.tsv",
+    Path(__file__).parent.parent.parent / "EDAM.tsv",
+    Path.home() / ".cache" / "cmdsaw" / "EDAM.tsv",
+]
+
+def _parse_edam_tsv(tsv_path: str) -> Dict[str, Tuple[str, str]]:
+    """
+    Parse EDAM.tsv file to extract format mappings.
+    
+    :param tsv_path: Path to EDAM.tsv file
+    :return: Dictionary mapping extensions to (edam_id, label)
+    """
+    formats = {}
+    extension_map = {}
+    
+    try:
+        with open(tsv_path, 'r', encoding='utf-8') as f:
+            reader = csv.reader(f, delimiter='\t')
+            for row in reader:
+                if not row or not row[0].startswith('http://edamontology.org/format_'):
+                    continue
+                
+                uri = row[0]
+                format_id = uri.split('/')[-1]
+                name = row[1].strip() if len(row) > 1 else ''
+                synonyms = row[2].strip() if len(row) > 2 else ''
+                
+                if not name:
+                    continue
+                
+                # Store format info
+                formats[format_id] = name
+                
+                # Try to extract file extensions from name and synonyms
+                all_text = f"{name} {synonyms}".lower()
+                
+                # Common patterns for file extensions
+                for word in all_text.split():
+                    # Direct extensions like ".bam", ".vcf"
+                    if word.startswith('.') and len(word) > 1:
+                        extension_map[word] = (format_id, name)
+                    # Format names that match extensions
+                    elif word in ['fasta', 'fastq', 'bam', 'sam', 'vcf', 'bed', 'gff', 'gtf']:
+                        extension_map[f".{word}"] = (format_id, name)
+                
+    except Exception as e:
+        print(f"Warning: Could not parse EDAM.tsv: {e}")
+    
+    return extension_map
+
+# Try to load from EDAM.tsv
+_EDAM_LOADED = {}
+for path in _EDAM_TSV_PATHS:
+    if path.exists():
+        _EDAM_LOADED = _parse_edam_tsv(str(path))
+        break
+
+# Fallback/supplementary hardcoded mappings for common formats
 # Format: extension -> (edam_id, edam_label)
-EXTENSION_TO_EDAM = {
+_FALLBACK_MAPPINGS = {
     # Sequence formats
     ".fasta": ("format_1929", "FASTA"),
     ".fa": ("format_1929", "FASTA"),
@@ -83,6 +150,9 @@ EXTENSION_TO_EDAM = {
     ".stockholm": ("format_1961", "Stockholm"),
     ".clustal": ("format_1982", "Clustal"),
 }
+
+# Combine loaded and fallback mappings (loaded takes precedence)
+EXTENSION_TO_EDAM = {**_FALLBACK_MAPPINGS, **_EDAM_LOADED}
 
 def get_edam_format(extension: str) -> tuple[str, str] | None:
     """
