@@ -5,6 +5,12 @@ from pydantic import BaseModel, Field
 ScalarType = Literal["int","float","str","path","bool","choice","unknown"]
 FileRole = Literal["input","output","none"]
 
+class FileFormat(BaseModel):
+    """File format information with extension and optional EDAM ontology term."""
+    extension: str = Field(..., description="File extension including the dot (e.g., '.csv', '.bam')")
+    edam_format: Optional[str] = Field(None, description="EDAM format ontology term (e.g., 'format_1929' for FASTA)")
+    edam_uri: Optional[str] = Field(None, description="Full EDAM URI (e.g., 'http://edamontology.org/format_1929')")
+
 class OptionDoc(BaseModel):
     long: Optional[str] = None
     short: Optional[str] = None
@@ -18,6 +24,7 @@ class OptionDoc(BaseModel):
     envvar: Optional[str] = None
     aliases: List[str] = Field(default_factory=list)
     file_role: FileRole = "none"
+    file_format: Optional[FileFormat] = None
 
 class PositionalDoc(BaseModel):
     name: str
@@ -27,6 +34,7 @@ class PositionalDoc(BaseModel):
     type: ScalarType = "unknown"
     description: Optional[str] = None
     file_role: FileRole = "none"
+    file_format: Optional[FileFormat] = None
 
 class CommandDoc(BaseModel):
     name: str
