@@ -3,6 +3,7 @@ from typing import Literal, Optional, List
 from pydantic import BaseModel, Field
 
 ScalarType = Literal["int","float","str","path","bool","choice","unknown"]
+FileRole = Literal["input","output","none"]
 
 class OptionDoc(BaseModel):
     long: Optional[str] = None
@@ -16,6 +17,7 @@ class OptionDoc(BaseModel):
     repeatable: bool = False
     envvar: Optional[str] = None
     aliases: List[str] = Field(default_factory=list)
+    file_role: FileRole = "none"
 
 class PositionalDoc(BaseModel):
     name: str
@@ -24,6 +26,7 @@ class PositionalDoc(BaseModel):
     required: bool = True
     type: ScalarType = "unknown"
     description: Optional[str] = None
+    file_role: FileRole = "none"
 
 class CommandDoc(BaseModel):
     name: str

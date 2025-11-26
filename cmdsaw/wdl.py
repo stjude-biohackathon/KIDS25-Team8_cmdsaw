@@ -175,13 +175,13 @@ def _inputs_block(cmd: CommandDoc, est: ResourceEstimate) -> tuple[str, list[str
         else:
             decl = f"{wtype}{optional} {var}"
         lines.append(decl)
-        metas.append(f'  "{var}": "desc={opt.description or ""}; flag={_flag_token(opt)}; required={opt.required}; repeatable={opt.repeatable}; type={opt.type}"')
+        metas.append(f'  "{var}": "desc={opt.description or ""}; flag={_flag_token(opt)}; required={opt.required}; repeatable={opt.repeatable}; type={opt.type}; file_role={opt.file_role}"')
     for pos in sorted(cmd.positionals, key=lambda p: p.index):
         var = _sanitize_var_name(pos.name)
         wtype = _wdl_type(pos.type, False, pos.variadic)
         optional = "?" if not pos.required else ""
         lines.append(f"{wtype}{optional} {var}")
-        metas.append(f'  "{var}": "positional index={pos.index}; desc={pos.description or ""}; required={pos.required}"')
+        metas.append(f'  "{var}": "positional index={pos.index}; desc={pos.description or ""}; required={pos.required}; file_role={pos.file_role}"')
     return "\n  ".join(lines), metas
 
 def _command_block(cmd: CommandDoc) -> str:
