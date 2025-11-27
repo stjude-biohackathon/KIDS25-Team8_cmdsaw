@@ -28,10 +28,6 @@ For each option and positional with file_role="input" or file_role="output":
 - If no format is clear from the text, set file_format to null
 - The extension must include the leading dot (e.g., ".bam" not "bam")
 
-**IMPORTANT: Piped Output Support**
-- Always set supports_piped_output=False for all parameters
-- This field is reserved for user configuration and should not be auto-detected
-
 Return only JSON.
 """
 
@@ -61,9 +57,6 @@ For each option and positional with file_role="input" or file_role="output":
 - If no format is clear from the text, set file_format to null
 - The extension must include the leading dot (e.g., ".bam" not "bam")
 
-**IMPORTANT: Piped Output Support**
-- Always set supports_piped_output=False for all parameters
-- This field is reserved for user configuration and should not be auto-detected
 
 **CRITICAL: SUBCOMMAND DISCOVERY**
 PAY SPECIAL ATTENTION to discovering ALL available subcommands. This is the MOST IMPORTANT part of your task.
@@ -145,13 +138,13 @@ FEWSHOT = [
             "options": [
                 {"long":"--min-length","short":None,"is_flag":False,"type":"int","choices":None,"required":False,"default":"50","description":"Minimum sequence length","repeatable":False,"envvar":None,"aliases":[],"file_role":"none","file_format":None},
                 {"long":"--max-length","short":None,"is_flag":False,"type":"int","choices":None,"required":False,"default":None,"description":"Maximum sequence length","repeatable":False,"envvar":None,"aliases":[],"file_role":"none","file_format":None},
-                {"long":"--output","short":"-o","is_flag":False,"type":"path","choices":None,"required":False,"default":"stdout","description":"Output file","repeatable":False,"envvar":None,"aliases":[],"file_role":"output","file_format":None,"supports_piped_output":False},
+                {"long":"--output","short":"-o","is_flag":False,"type":"path","choices":None,"required":False,"default":"stdout","description":"Output file","repeatable":False,"envvar":None,"aliases":[],"file_role":"output","file_format":None},
                 {"long":"--format","short":None,"is_flag":False,"type":"choice","choices":["fasta","fastq","gff"],"required":False,"default":None,"description":"Output format","repeatable":False,"envvar":None,"aliases":[],"file_role":"none","file_format":None},
                 {"long":"-v","short":None,"is_flag":True,"type":"bool","choices":None,"required":False,"default":None,"description":"Verbosity level","repeatable":True,"envvar":None,"aliases":[],"file_role":"none","file_format":None}
             ],
             "positionals": [
                 {"name":"operation","index":0,"variadic":False,"required":True,"type":"str","description":"Operation to perform","file_role":"none","file_format":None},
-                {"name":"input.fasta","index":1,"variadic":True,"required":True,"type":"path","description":"Input sequence file(s)","file_role":"input","file_format":{"extension":".fasta","edam_format":None,"edam_uri":None},"supports_piped_output":False}
+                {"name":"input.fasta","index":1,"variadic":True,"required":True,"type":"path","description":"Input sequence file(s)","file_role":"input","file_format":{"extension":".fasta","edam_format":None,"edam_uri":None}}
             ],
             "subcommands": ["filter","trim","merge"],
             "requires_subcommand": True
@@ -178,8 +171,8 @@ FEWSHOT = [
                 {"long":"--mem-gb","short":None,"is_flag":False,"type":"int","choices":None,"required":False,"default":None,"description":"Memory limit in GB","repeatable":False,"envvar":None,"aliases":[],"file_role":"none","file_format":None}
             ],
             "positionals": [
-                {"name":"reference.fa","index":0,"variadic":False,"required":True,"type":"path","description":"Reference genome file","file_role":"input","file_format":{"extension":".fa","edam_format":None,"edam_uri":None},"supports_piped_output":False},
-                {"name":"query.fa","index":1,"variadic":True,"required":True,"type":"path","description":"Query sequence file(s)","file_role":"input","file_format":{"extension":".fa","edam_format":None,"edam_uri":None},"supports_piped_output":False}
+                {"name":"reference.fa","index":0,"variadic":False,"required":True,"type":"path","description":"Reference genome file","file_role":"input","file_format":{"extension":".fa","edam_format":None,"edam_uri":None}},
+                {"name":"query.fa","index":1,"variadic":True,"required":True,"type":"path","description":"Query sequence file(s)","file_role":"input","file_format":{"extension":".fa","edam_format":None,"edam_uri":None}}
             ],
             "subcommands": [],
             "requires_subcommand": False

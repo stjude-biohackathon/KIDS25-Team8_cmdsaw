@@ -125,35 +125,28 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
     
     # Apply piped output configuration if specified
     if piped:
-        click.echo(f"\nEnabling piped output for all output parameters...")
+        click.echo(f"\nEnabling piped output for commands with output parameters...")
         
         # Apply to all_docs
         for doc in all_docs:
-            for opt in doc.options:
-                if opt.file_role == "output":
-                    opt.supports_piped_output = True
-                    click.echo(f"  - Enabled piped output for {doc.path}:{opt.long or opt.short}")
-            for pos in doc.positionals:
-                if pos.file_role == "output":
-                    pos.supports_piped_output = True
-                    click.echo(f"  - Enabled piped output for {doc.path}:{pos.name}")
+            has_output = any(opt.file_role == "output" for opt in doc.options) or \
+                        any(pos.file_role == "output" for pos in doc.positionals)
+            if has_output:
+                doc.supports_piped_output = True
+                click.echo(f"  - Enabled piped output for {doc.path}")
         
         # Also update the result.tool
-        for opt in result.tool.options:
-            if opt.file_role == "output":
-                opt.supports_piped_output = True
-        for pos in result.tool.positionals:
-            if pos.file_role == "output":
-                pos.supports_piped_output = True
+        has_output = any(opt.file_role == "output" for opt in result.tool.options) or \
+                    any(pos.file_role == "output" for pos in result.tool.positionals)
+        if has_output:
+            result.tool.supports_piped_output = True
         
         # Update subcommands in result.tool
         for subcmd in result.tool.subcommands:
-            for opt in subcmd.options:
-                if opt.file_role == "output":
-                    opt.supports_piped_output = True
-            for pos in subcmd.positionals:
-                if pos.file_role == "output":
-                    pos.supports_piped_output = True
+            has_output = any(opt.file_role == "output" for opt in subcmd.options) or \
+                        any(pos.file_role == "output" for pos in subcmd.positionals)
+            if has_output:
+                subcmd.supports_piped_output = True
     
     # Apply LLM double-check by default (unless disabled)
     if not no_llm_double_check:

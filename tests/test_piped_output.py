@@ -1,50 +1,64 @@
 """Test piped output support and EDAM.tsv loading."""
 from cmdsaw.parsing.schema import (
-    OptionDoc, PositionalDoc, FileFormat, 
+    OptionDoc, PositionalDoc, CommandDoc, ToolDoc, FileFormat, 
     generate_piped_output_filename
 )
 from cmdsaw.parsing.edam_mappings import get_edam_format, EXTENSION_TO_EDAM
 
 
-def test_supports_piped_output_option():
-    """Test that OptionDoc supports piped output flag."""
-    # Output with piped support
-    opt = OptionDoc(
-        long="--output",
-        type="path",
-        file_role="output",
+def test_supports_piped_output_command():
+    """Test that CommandDoc supports piped output flag."""
+    # Command with piped output support
+    cmd = CommandDoc(
+        name="view",
+        path="samtools view",
+        help_text="View SAM/BAM files",
+        options=[
+            OptionDoc(long="--output", type="path", file_role="output")
+        ],
         supports_piped_output=True
     )
-    assert opt.supports_piped_output is True
+    assert cmd.supports_piped_output is True
     
-    # Output without piped support
-    opt2 = OptionDoc(
-        long="--output",
-        type="path",
-        file_role="output",
+    # Command without piped support
+    cmd2 = CommandDoc(
+        name="view",
+        path="samtools view",
+        help_text="View SAM/BAM files",
+        options=[
+            OptionDoc(long="--output", type="path", file_role="output")
+        ],
         supports_piped_output=False
     )
-    assert opt2.supports_piped_output is False
+    assert cmd2.supports_piped_output is False
     
     # Default is False
-    opt3 = OptionDoc(long="--test", type="path")
-    assert opt3.supports_piped_output is False
+    cmd3 = CommandDoc(name="test", path="test", help_text="Test command")
+    assert cmd3.supports_piped_output is False
 
 
-def test_supports_piped_output_positional():
-    """Test that PositionalDoc supports piped output flag."""
-    pos = PositionalDoc(
-        name="output_file",
-        index=0,
-        type="path",
-        file_role="output",
+def test_supports_piped_output_tool():
+    """Test that ToolDoc supports piped output flag."""
+    tool = ToolDoc(
+        command="samtools",
+        help_text="Samtools help text",
+        invocation=["samtools"],
+        captured_at="2024-01-01",
+        options=[
+            OptionDoc(long="--output", type="path", file_role="output")
+        ],
         supports_piped_output=True
     )
-    assert pos.supports_piped_output is True
+    assert tool.supports_piped_output is True
     
     # Default is False
-    pos2 = PositionalDoc(name="file", index=0)
-    assert pos2.supports_piped_output is False
+    tool2 = ToolDoc(
+        command="test",
+        help_text="Test tool",
+        invocation=["test"],
+        captured_at="2024-01-01"
+    )
+    assert tool2.supports_piped_output is False
 
 
 def test_generate_piped_output_filename_basic():
@@ -81,18 +95,21 @@ def test_generate_piped_output_filename_special_chars():
 
 
 def test_piped_output_serialization():
-    """Test that supports_piped_output serializes correctly."""
-    opt = OptionDoc(
-        long="--output",
-        type="path",
-        file_role="output",
-        file_format=FileFormat(extension=".txt"),
+    """Test that supports_piped_output serializes correctly on commands."""
+    cmd = CommandDoc(
+        name="view",
+        path="samtools view",
+        help_text="View SAM/BAM files",
+        options=[
+            OptionDoc(long="--output", type="path", file_role="output",
+                     file_format=FileFormat(extension=".txt"))
+        ],
         supports_piped_output=True
     )
     
-    opt_dict = opt.model_dump()
-    assert "supports_piped_output" in opt_dict
-    assert opt_dict["supports_piped_output"] is True
+    cmd_dict = cmd.model_dump()
+    assert "supports_piped_output" in cmd_dict
+    assert cmd_dict["supports_piped_output"] is True
 
 
 def test_edam_mappings_loaded():
@@ -118,21 +135,31 @@ def test_edam_mappings_loaded():
 
 def test_piped_output_with_format():
     """Test complete workflow with piped output and format."""
-    opt = OptionDoc(
-        long="--output",
-        short="-o",
-        type="path",
-        required=False,
-        default="stdout",
-        description="Output file (default: stdout)",
-        file_role="output",
-        file_format=FileFormat(extension=".bam", edam_format="format_2572"),
+    cmd = CommandDoc(
+        name="view",
+        path="samtools view",
+        help_text="View SAM/BAM files",
+        options=[
+            OptionDoc(
+                long="--output",
+                short="-o",
+                type="path",
+                required=False,
+                default="stdout",
+                description="Output file (default: stdout)",
+                file_role="output",
+                file_format=FileFormat(extension=".bam", edam_format="format_2572")
+            )
+        ],
         supports_piped_output=True
     )
     
-    # Verify all fields
+    # Verify command has piped output enabled
+    assert cmd.supports_piped_output is True
+    
+    # Verify option has file_role and format
+    opt = cmd.options[0]
     assert opt.file_role == "output"
-    assert opt.supports_piped_output is True
     assert opt.file_format is not None
     assert opt.file_format.extension == ".bam"
     assert opt.file_format.edam_format == "format_2572"
@@ -143,11 +170,11 @@ def test_piped_output_with_format():
 
 
 if __name__ == '__main__':
-    test_supports_piped_output_option()
-    print("✓ test_supports_piped_output_option passed")
+    test_supports_piped_output_command()
+    print("✓ test_supports_piped_output_command passed")
     
-    test_supports_piped_output_positional()
-    print("✓ test_supports_piped_output_positional passed")
+    test_supports_piped_output_tool()
+    print("✓ test_supports_piped_output_tool passed")
     
     test_generate_piped_output_filename_basic()
     print("✓ test_generate_piped_output_filename_basic passed")

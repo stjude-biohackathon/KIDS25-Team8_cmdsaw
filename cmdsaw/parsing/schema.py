@@ -25,7 +25,6 @@ class OptionDoc(BaseModel):
     aliases: List[str] = Field(default_factory=list)
     file_role: FileRole = "none"
     file_format: Optional[FileFormat] = None
-    supports_piped_output: bool = False
 
 class PositionalDoc(BaseModel):
     name: str
@@ -36,7 +35,6 @@ class PositionalDoc(BaseModel):
     description: Optional[str] = None
     file_role: FileRole = "none"
     file_format: Optional[FileFormat] = None
-    supports_piped_output: bool = False
 
 class CommandDoc(BaseModel):
     name: str
@@ -46,6 +44,7 @@ class CommandDoc(BaseModel):
     positionals: List[PositionalDoc] = Field(default_factory=list)
     subcommands: List[str] = Field(default_factory=list)
     requires_subcommand: bool = False
+    supports_piped_output: bool = False
 
 class ToolDoc(BaseModel):
     command: str
@@ -57,6 +56,7 @@ class ToolDoc(BaseModel):
     subcommands: List[CommandDoc] = Field(default_factory=list)
     captured_at: str
     container_info: Optional["ContainerInfo"] = None
+    supports_piped_output: bool = False
 
 class ParseDiagnostics(BaseModel):
     warnings: List[str] = Field(default_factory=list)
