@@ -29,10 +29,8 @@ For each option and positional with file_role="input" or file_role="output":
 - The extension must include the leading dot (e.g., ".bam" not "bam")
 
 **IMPORTANT: Piped Output Support**
-For output parameters (file_role="output"):
-- Set supports_piped_output=True if the parameter is optional and the command can write to stdout when the parameter is not provided
-- Look for clues like: "default: stdout", "writes to stdout", "output to stdout if not specified", "-" for stdin/stdout
-- Set supports_piped_output=False for required output parameters or when stdout is not an option
+- Always set supports_piped_output=False for all parameters
+- This field is reserved for user configuration and should not be auto-detected
 
 Return only JSON.
 """
@@ -64,10 +62,8 @@ For each option and positional with file_role="input" or file_role="output":
 - The extension must include the leading dot (e.g., ".bam" not "bam")
 
 **IMPORTANT: Piped Output Support**
-For output parameters (file_role="output"):
-- Set supports_piped_output=True if the parameter is optional and the command can write to stdout when the parameter is not provided
-- Look for clues like: "default: stdout", "writes to stdout", "output to stdout if not specified", "-" for stdin/stdout
-- Set supports_piped_output=False for required output parameters or when stdout is not an option
+- Always set supports_piped_output=False for all parameters
+- This field is reserved for user configuration and should not be auto-detected
 
 **CRITICAL: SUBCOMMAND DISCOVERY**
 PAY SPECIAL ATTENTION to discovering ALL available subcommands. This is the MOST IMPORTANT part of your task.
@@ -149,7 +145,7 @@ FEWSHOT = [
             "options": [
                 {"long":"--min-length","short":None,"is_flag":False,"type":"int","choices":None,"required":False,"default":"50","description":"Minimum sequence length","repeatable":False,"envvar":None,"aliases":[],"file_role":"none","file_format":None},
                 {"long":"--max-length","short":None,"is_flag":False,"type":"int","choices":None,"required":False,"default":None,"description":"Maximum sequence length","repeatable":False,"envvar":None,"aliases":[],"file_role":"none","file_format":None},
-                {"long":"--output","short":"-o","is_flag":False,"type":"path","choices":None,"required":False,"default":"stdout","description":"Output file","repeatable":False,"envvar":None,"aliases":[],"file_role":"output","file_format":None,"supports_piped_output":True},
+                {"long":"--output","short":"-o","is_flag":False,"type":"path","choices":None,"required":False,"default":"stdout","description":"Output file","repeatable":False,"envvar":None,"aliases":[],"file_role":"output","file_format":None,"supports_piped_output":False},
                 {"long":"--format","short":None,"is_flag":False,"type":"choice","choices":["fasta","fastq","gff"],"required":False,"default":None,"description":"Output format","repeatable":False,"envvar":None,"aliases":[],"file_role":"none","file_format":None},
                 {"long":"-v","short":None,"is_flag":True,"type":"bool","choices":None,"required":False,"default":None,"description":"Verbosity level","repeatable":True,"envvar":None,"aliases":[],"file_role":"none","file_format":None}
             ],

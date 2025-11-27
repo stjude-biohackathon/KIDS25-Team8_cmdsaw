@@ -26,7 +26,8 @@ from .json_review import review_json_interactive, llm_double_check as perform_ll
 @click.option("--review-subcommands", is_flag=True, default=False, help="Enable interactive review of discovered subcommands")
 @click.option("--review-json", is_flag=True, default=False, help="Enable interactive review of JSON output before saving")
 @click.option("--no-llm-double-check", is_flag=True, default=False, help="Disable automatic LLM verification of parsed JSON")
-def main(command, model, provider, temperature, google_api_key, output, wdl_out, timeout, max_depth, concurrency, help_flags, workdir, env, no_llm_cache, review_subcommands, review_json, no_llm_double_check):
+@click.option("--piped-output", multiple=True, help="Specify output parameters that support piped output (format: command_path:param_name)", metavar="COMMAND:PARAM")
+def main(command, model, provider, temperature, google_api_key, output, wdl_out, timeout, max_depth, concurrency, help_flags, workdir, env, no_llm_cache, review_subcommands, review_json, no_llm_double_check, piped_output):
     """
     Parse CLI help text using LLM and emit structured documentation.
 
@@ -68,6 +69,8 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
     :type review_json: bool
     :param no_llm_double_check: Whether to disable automatic LLM verification of JSON
     :type no_llm_double_check: bool
+    :param piped_output: Tuple of "command_path:param_name" strings to mark as supporting piped output
+    :type piped_output: tuple[str, ...]
     :return: None
     :rtype: None
     """
@@ -119,6 +122,53 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
         click.echo("\nAll discovered subcommands:")
         for doc in all_docs[1:]:  # Skip root command
             click.echo(f"  - {doc.path}")
+    
+    # Apply piped output configuration if specified
+    if piped_output:
+        click.echo(f"\nApplying piped output configuration...")
+        piped_config = {}
+        for spec in piped_output:
+            if ":" not in spec:
+                click.echo(f"  Warning: Invalid piped output spec '{spec}' (expected format: command_path:param_name)", err=True)
+                continue
+            cmd_path, param_name = spec.split(":", 1)
+            if cmd_path not in piped_config:
+                piped_config[cmd_path] = []
+            piped_config[cmd_path].append(param_name)
+        
+        # Apply to all_docs
+        for doc in all_docs:
+            if doc.path in piped_config:
+                param_names = piped_config[doc.path]
+                for opt in doc.options:
+                    if opt.long in param_names or opt.short in param_names:
+                        opt.supports_piped_output = True
+                        click.echo(f"  - Enabled piped output for {doc.path}:{opt.long or opt.short}")
+                for pos in doc.positionals:
+                    if pos.name in param_names:
+                        pos.supports_piped_output = True
+                        click.echo(f"  - Enabled piped output for {doc.path}:{pos.name}")
+        
+        # Also update the result.tool
+        if result.tool.command in piped_config:
+            param_names = piped_config[result.tool.command]
+            for opt in result.tool.options:
+                if opt.long in param_names or opt.short in param_names:
+                    opt.supports_piped_output = True
+            for pos in result.tool.positionals:
+                if pos.name in param_names:
+                    pos.supports_piped_output = True
+        
+        # Update subcommands in result.tool
+        for subcmd in result.tool.subcommands:
+            if subcmd.path in piped_config:
+                param_names = piped_config[subcmd.path]
+                for opt in subcmd.options:
+                    if opt.long in param_names or opt.short in param_names:
+                        opt.supports_piped_output = True
+                for pos in subcmd.positionals:
+                    if pos.name in param_names:
+                        pos.supports_piped_output = True
     
     # Apply LLM double-check by default (unless disabled)
     if not no_llm_double_check:
