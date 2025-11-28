@@ -1,7 +1,6 @@
 """Test WDL generation uses requirements section per WDL 1.2 spec."""
 from cmdsaw.parsing.schema import CommandDoc, OptionDoc, ContainerInfo
 from cmdsaw.parsing.resource_estimator import ResourceEstimate
-from cmdsaw.wdl import _inputs_block
 from unittest.mock import patch
 
 
