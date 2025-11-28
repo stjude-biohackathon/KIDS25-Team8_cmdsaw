@@ -26,7 +26,8 @@ from .json_review import review_json_interactive, llm_double_check as perform_ll
 @click.option("--review-subcommands", is_flag=True, default=False, help="Enable interactive review of discovered subcommands")
 @click.option("--review-json", is_flag=True, default=False, help="Enable interactive review of JSON output before saving")
 @click.option("--no-llm-double-check", is_flag=True, default=False, help="Disable automatic LLM verification of parsed JSON")
-def main(command, model, provider, temperature, google_api_key, output, wdl_out, timeout, max_depth, concurrency, help_flags, workdir, env, no_llm_cache, review_subcommands, review_json, no_llm_double_check):
+@click.option("--piped", is_flag=True, default=False, help="Enable piped output support for all output parameters with auto-generated filenames")
+def main(command, model, provider, temperature, google_api_key, output, wdl_out, timeout, max_depth, concurrency, help_flags, workdir, env, no_llm_cache, review_subcommands, review_json, no_llm_double_check, piped):
     """
     Parse CLI help text using LLM and emit structured documentation.
 
@@ -68,6 +69,8 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
     :type review_json: bool
     :param no_llm_double_check: Whether to disable automatic LLM verification of JSON
     :type no_llm_double_check: bool
+    :param piped: Whether to enable piped output support for all output parameters
+    :type piped: bool
     :return: None
     :rtype: None
     """
@@ -119,6 +122,31 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
         click.echo("\nAll discovered subcommands:")
         for doc in all_docs[1:]:  # Skip root command
             click.echo(f"  - {doc.path}")
+    
+    # Apply piped output configuration if specified
+    if piped:
+        click.echo(f"\nEnabling piped output for commands with output parameters...")
+        
+        # Apply to all_docs
+        for doc in all_docs:
+            has_output = any(opt.file_role == "output" for opt in doc.options) or \
+                        any(pos.file_role == "output" for pos in doc.positionals)
+            if has_output:
+                doc.supports_piped_output = True
+                click.echo(f"  - Enabled piped output for {doc.path}")
+        
+        # Also update the result.tool
+        has_output = any(opt.file_role == "output" for opt in result.tool.options) or \
+                    any(pos.file_role == "output" for pos in result.tool.positionals)
+        if has_output:
+            result.tool.supports_piped_output = True
+        
+        # Update subcommands in result.tool
+        for subcmd in result.tool.subcommands:
+            has_output = any(opt.file_role == "output" for opt in subcmd.options) or \
+                        any(pos.file_role == "output" for pos in subcmd.positionals)
+            if has_output:
+                subcmd.supports_piped_output = True
     
     # Apply LLM double-check by default (unless disabled)
     if not no_llm_double_check:

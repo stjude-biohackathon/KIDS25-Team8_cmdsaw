@@ -175,13 +175,43 @@ def _inputs_block(cmd: CommandDoc, est: ResourceEstimate) -> tuple[str, list[str
         else:
             decl = f"{wtype}{optional} {var}"
         lines.append(decl)
-        metas.append(f'  "{var}": "desc={opt.description or ""}; flag={_flag_token(opt)}; required={opt.required}; repeatable={opt.repeatable}; type={opt.type}"')
+        
+        # Build metadata string with file format info
+        meta_parts = [
+            f"desc={opt.description or ''}",
+            f"flag={_flag_token(opt)}",
+            f"required={opt.required}",
+            f"repeatable={opt.repeatable}",
+            f"type={opt.type}",
+            f"file_role={opt.file_role}"
+        ]
+        if opt.file_format:
+            meta_parts.append(f"file_format={opt.file_format.extension}")
+            if opt.file_format.edam_format:
+                meta_parts.append(f"edam={opt.file_format.edam_format}")
+        
+        metas.append(f'  "{var}": "{"; ".join(meta_parts)}"')
+        
     for pos in sorted(cmd.positionals, key=lambda p: p.index):
         var = _sanitize_var_name(pos.name)
         wtype = _wdl_type(pos.type, False, pos.variadic)
         optional = "?" if not pos.required else ""
         lines.append(f"{wtype}{optional} {var}")
-        metas.append(f'  "{var}": "positional index={pos.index}; desc={pos.description or ""}; required={pos.required}"')
+        
+        # Build metadata string with file format info
+        meta_parts = [
+            f"positional index={pos.index}",
+            f"desc={pos.description or ''}",
+            f"required={pos.required}",
+            f"file_role={pos.file_role}"
+        ]
+        if pos.file_format:
+            meta_parts.append(f"file_format={pos.file_format.extension}")
+            if pos.file_format.edam_format:
+                meta_parts.append(f"edam={pos.file_format.edam_format}")
+        
+        metas.append(f'  "{var}": "{"; ".join(meta_parts)}"')
+        
     return "\n  ".join(lines), metas
 
 def _command_block(cmd: CommandDoc) -> str:
