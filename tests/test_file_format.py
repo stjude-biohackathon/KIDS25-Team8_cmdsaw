@@ -1,5 +1,5 @@
 """Test file_format field for tracking file formats and EDAM ontology."""
-from cmdsaw.parsing.schema import CommandDoc, ToolDoc, OptionDoc, PositionalDoc, FileFormat
+from cmdsaw.parsing.schema import CommandDoc, OptionDoc, PositionalDoc, FileFormat
 from cmdsaw.parsing.edam_mappings import get_edam_format, get_edam_uri
 
 

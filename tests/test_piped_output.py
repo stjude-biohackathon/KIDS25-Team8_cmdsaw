@@ -1,6 +1,6 @@
 """Test piped output support and EDAM.tsv loading."""
 from cmdsaw.parsing.schema import (
-    OptionDoc, PositionalDoc, CommandDoc, ToolDoc, FileFormat, 
+    OptionDoc, CommandDoc, ToolDoc, FileFormat, 
     generate_piped_output_filename
 )
 from cmdsaw.parsing.edam_mappings import get_edam_format, EXTENSION_TO_EDAM

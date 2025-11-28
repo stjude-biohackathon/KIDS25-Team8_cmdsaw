@@ -7,7 +7,6 @@ The EDAM.tsv file should be included as package data.
 """
 
 import csv
-import os
 import re
 from pathlib import Path
 from typing import Dict, Tuple, Optional

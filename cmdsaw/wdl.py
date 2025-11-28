@@ -1,7 +1,7 @@
 from __future__ import annotations
 import re
 from typing import List, Optional
-from .parsing.schema import CommandDoc, OptionDoc, PositionalDoc, ContainerInfo
+from .parsing.schema import CommandDoc, OptionDoc
 from .parsing.resource_estimator import estimate_resources, ResourceEstimate
 
 def _sanitize_task_name(path: str) -> str:

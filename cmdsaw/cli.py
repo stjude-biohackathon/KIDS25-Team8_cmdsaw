@@ -4,7 +4,7 @@ import os
 import click
 from .constants import DEFAULT_MODEL, DEFAULT_TIMEOUT, DEFAULT_MAX_DEPTH, DEFAULT_CONCURRENCY, DEFAULT_TEMPERATURE, DEFAULT_PROVIDER
 from .discovery import build_tree
-from .serialize import to_json, write_json
+from .serialize import write_json
 from .wdl import emit_wdl
 from .json_review import review_json_interactive, llm_double_check as perform_llm_double_check
 

@@ -6,7 +6,6 @@ import json
 from cmdsaw.parsing.schema import CmdSawResult, ToolDoc, CommandDoc, ParseDiagnostics, OptionDoc, PositionalDoc
 from cmdsaw.json_review import display_json_summary, llm_double_check, llm_fix_issues
 from datetime import datetime
-from unittest.mock import patch, MagicMock
 import pytest
 
 
