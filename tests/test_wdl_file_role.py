@@ -1,8 +1,7 @@
 """Test WDL generation includes file_role metadata."""
-import re
 from cmdsaw.parsing.schema import CommandDoc, OptionDoc, PositionalDoc
 from cmdsaw.parsing.resource_estimator import ResourceEstimate
-from cmdsaw.wdl import _inputs_block, _task_for
+from cmdsaw.wdl import _inputs_block
 
 
 def test_inputs_block_includes_file_role():

@@ -1,7 +1,7 @@
 from __future__ import annotations
 import re
 from typing import List, Optional
-from .parsing.schema import CommandDoc, OptionDoc, PositionalDoc, ContainerInfo
+from .parsing.schema import CommandDoc, OptionDoc
 from .parsing.resource_estimator import estimate_resources, ResourceEstimate
 
 def _sanitize_task_name(path: str) -> str:
@@ -246,7 +246,7 @@ def _task_for(doc: CommandDoc, model_name: str, provider: str = "ollama", temper
     Generate a complete WDL task definition for a command.
 
     Creates a WDL 1.2 task with input declarations, command block,
-    runtime requirements, and parameter metadata.
+    requirements section, and parameter metadata.
 
     :param doc: Command documentation object
     :type doc: CommandDoc
@@ -271,17 +271,17 @@ def _task_for(doc: CommandDoc, model_name: str, provider: str = "ollama", temper
     cpu_default = est.cpu
     mem_default = int(round(est.mem_gb))
     
-    # Build runtime block with container info
-    runtime_lines = [
+    # Build requirements block with container info (WDL 1.2 spec)
+    requirements_lines = [
         f"cpu: ~{{{{select_first([cpu, {cpu_default}])}}}}",
         f"memory: \"~{{{{select_first([memory_gb, {mem_default}])}}}}G\""
     ]
     
-    # Add docker container if available (WDL 1.2 spec)
+    # Add container if available (WDL 1.2 spec)
     if container_info and container_info.docker:
-        runtime_lines.append(f"docker: \"{container_info.docker}\"")
+        requirements_lines.append(f"container: \"{container_info.docker}\"")
     
-    runtime_block = "\n        ".join(runtime_lines)
+    requirements_block = "\n        ".join(requirements_lines)
     
     return f"""task {tname} {{
     input {{
@@ -290,8 +290,8 @@ def _task_for(doc: CommandDoc, model_name: str, provider: str = "ollama", temper
     command <<<
         {cmd_block}
     >>>
-    runtime {{
-        {runtime_block}
+    requirements {{
+        {requirements_block}
     }}
     parameter_meta {{
         {meta_block}
