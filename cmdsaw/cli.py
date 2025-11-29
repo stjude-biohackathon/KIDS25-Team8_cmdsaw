@@ -7,6 +7,7 @@ from .discovery import build_tree
 from .serialize import write_json
 from .wdl import emit_wdl
 from .json_review import review_json_interactive, llm_double_check as perform_llm_double_check
+from .parsing.edam_mappings import enrich_with_edam
 
 @click.command()
 @click.option("--command", required=True, help="Root command to inspect, e.g. samtools")
@@ -25,9 +26,9 @@ from .json_review import review_json_interactive, llm_double_check as perform_ll
 @click.option("--no-llm-cache", is_flag=True, default=False, help="Disable on-disk LLM parse cache")
 @click.option("--review-subcommands", is_flag=True, default=False, help="Enable interactive review of discovered subcommands")
 @click.option("--review-json", is_flag=True, default=False, help="Enable interactive review of JSON output before saving")
-@click.option("--no-llm-double-check", is_flag=True, default=False, help="Disable automatic LLM verification of parsed JSON")
+@click.option("--llm-check", is_flag=True, default=False, help="Enable automatic LLM verification of parsed JSON")
 @click.option("--piped", is_flag=True, default=False, help="Enable piped output support for all output parameters with auto-generated filenames")
-def main(command, model, provider, temperature, google_api_key, output, wdl_out, timeout, max_depth, concurrency, help_flags, workdir, env, no_llm_cache, review_subcommands, review_json, no_llm_double_check, piped):
+def main(command, model, provider, temperature, google_api_key, output, wdl_out, timeout, max_depth, concurrency, help_flags, workdir, env, no_llm_cache, review_subcommands, review_json, llm_check, piped):
     """
     Parse CLI help text using LLM and emit structured documentation.
 
@@ -67,8 +68,8 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
     :type review_subcommands: bool
     :param review_json: Whether to enable interactive review of JSON output
     :type review_json: bool
-    :param no_llm_double_check: Whether to disable automatic LLM verification of JSON
-    :type no_llm_double_check: bool
+    :param llm_check: Whether to enable automatic LLM verification of JSON
+    :type llm_check: bool
     :param piped: Whether to enable piped output support for all output parameters
     :type piped: bool
     :return: None
@@ -123,6 +124,12 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
         for doc in all_docs[1:]:  # Skip root command
             click.echo(f"  - {doc.path}")
     
+    # Enrich with EDAM format information
+    click.echo("\nEnriching with EDAM format information...")
+    enrich_with_edam(result.tool)
+    for doc in all_docs:
+        enrich_with_edam(doc)
+    
     # Apply piped output configuration if specified
     if piped:
         click.echo(f"\nEnabling piped output for all commands...")
@@ -139,8 +146,8 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
         for subcmd in result.tool.subcommands:
             subcmd.piped_output = True
     
-    # Apply LLM double-check by default (unless disabled)
-    if not no_llm_double_check:
+    # Apply LLM double-check if enabled
+    if llm_check:
         result = perform_llm_double_check(result, model, provider, temperature, google_api_key, all_docs)
     
     # Apply interactive review if requested
