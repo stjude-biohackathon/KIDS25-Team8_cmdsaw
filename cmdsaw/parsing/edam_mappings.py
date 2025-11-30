@@ -208,7 +208,10 @@ def enrich_with_edam(doc) -> None:
                     pos.file_format.edam_format = edam_info[0]
                     pos.file_format.edam_uri = get_edam_uri(edam_info[0])
     
-    # For ToolDoc, also enrich subcommands
-    if hasattr(doc, 'subcommands'):
-        for subcmd in doc.subcommands:
-            enrich_with_edam(subcmd)
+    # For ToolDoc, also enrich subcommands (ToolDoc.subcommands is List[CommandDoc])
+    # For CommandDoc, subcommands is List[str], so we skip recursion
+    if hasattr(doc, 'subcommands') and doc.subcommands:
+        # Check if first subcommand is a CommandDoc object (not a string)
+        if doc.subcommands and not isinstance(doc.subcommands[0], str):
+            for subcmd in doc.subcommands:
+                enrich_with_edam(subcmd)
