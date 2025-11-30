@@ -149,6 +149,9 @@ cmdsaw --command <tool-name> [OPTIONS]
 - `--wdl-out <file>` - Save WDL tasks to file
 - `--max-depth <n>` - Maximum subcommand recursion depth (default: 1)
 - `--concurrency <n>` - Parallel subcommand parsing (default: 4)
+- `--subcommand-help-format <format>` - Format for subcommand help invocation (default: subcommand-help)
+  - `subcommand-help` - Use format: `TOOL SUBCOMMAND --help` (e.g., `samtools view --help`)
+  - `help-subcommand` - Use format: `TOOL --help SUBCOMMAND` (e.g., `samtools --help view`)
 
 ### Interactive Subcommand Review
 
