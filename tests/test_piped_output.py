@@ -1,6 +1,6 @@
 """Test piped output support and EDAM.tsv loading."""
 from cmdsaw.parsing.schema import (
-    OptionDoc, PositionalDoc, CommandDoc, ToolDoc, FileFormat, 
+    OptionDoc, CommandDoc, ToolDoc, FileFormat, 
     generate_piped_output_filename
 )
 from cmdsaw.parsing.edam_mappings import get_edam_format, EXTENSION_TO_EDAM
@@ -16,9 +16,9 @@ def test_supports_piped_output_command():
         options=[
             OptionDoc(long="--output", type="path", file_role="output")
         ],
-        supports_piped_output=True
+        piped_output=True
     )
-    assert cmd.supports_piped_output is True
+    assert cmd.piped_output is True
     
     # Command without piped support
     cmd2 = CommandDoc(
@@ -28,13 +28,13 @@ def test_supports_piped_output_command():
         options=[
             OptionDoc(long="--output", type="path", file_role="output")
         ],
-        supports_piped_output=False
+        piped_output=False
     )
-    assert cmd2.supports_piped_output is False
+    assert cmd2.piped_output is False
     
     # Default is False
     cmd3 = CommandDoc(name="test", path="test", help_text="Test command")
-    assert cmd3.supports_piped_output is False
+    assert cmd3.piped_output is False
 
 
 def test_supports_piped_output_tool():
@@ -47,9 +47,9 @@ def test_supports_piped_output_tool():
         options=[
             OptionDoc(long="--output", type="path", file_role="output")
         ],
-        supports_piped_output=True
+        piped_output=True
     )
-    assert tool.supports_piped_output is True
+    assert tool.piped_output is True
     
     # Default is False
     tool2 = ToolDoc(
@@ -58,7 +58,7 @@ def test_supports_piped_output_tool():
         invocation=["test"],
         captured_at="2024-01-01"
     )
-    assert tool2.supports_piped_output is False
+    assert tool2.piped_output is False
 
 
 def test_generate_piped_output_filename_basic():
@@ -95,7 +95,7 @@ def test_generate_piped_output_filename_special_chars():
 
 
 def test_piped_output_serialization():
-    """Test that supports_piped_output serializes correctly on commands."""
+    """Test that piped_output serializes correctly on commands."""
     cmd = CommandDoc(
         name="view",
         path="samtools view",
@@ -104,12 +104,12 @@ def test_piped_output_serialization():
             OptionDoc(long="--output", type="path", file_role="output",
                      file_format=FileFormat(extension=".txt"))
         ],
-        supports_piped_output=True
+        piped_output=True
     )
     
     cmd_dict = cmd.model_dump()
-    assert "supports_piped_output" in cmd_dict
-    assert cmd_dict["supports_piped_output"] is True
+    assert "piped_output" in cmd_dict
+    assert cmd_dict["piped_output"] is True
 
 
 def test_edam_mappings_loaded():
@@ -151,11 +151,11 @@ def test_piped_output_with_format():
                 file_format=FileFormat(extension=".bam", edam_format="format_2572")
             )
         ],
-        supports_piped_output=True
+        piped_output=True
     )
     
     # Verify command has piped output enabled
-    assert cmd.supports_piped_output is True
+    assert cmd.piped_output is True
     
     # Verify option has file_role and format
     opt = cmd.options[0]

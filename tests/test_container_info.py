@@ -1,6 +1,5 @@
 """Test container info functionality."""
-from cmdsaw.parsing.schema import CommandDoc, ToolDoc, CmdSawResult, ParseDiagnostics, ContainerInfo, OptionDoc
-from cmdsaw.wdl import _task_for
+from cmdsaw.parsing.schema import ToolDoc, CmdSawResult, ParseDiagnostics, ContainerInfo
 
 
 def test_container_info_schema():

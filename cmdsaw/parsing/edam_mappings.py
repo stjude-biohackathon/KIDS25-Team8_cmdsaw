@@ -7,7 +7,6 @@ The EDAM.tsv file should be included as package data.
 """
 
 import csv
-import os
 import re
 from pathlib import Path
 from typing import Dict, Tuple, Optional
@@ -179,3 +178,40 @@ def get_edam_uri(edam_id: str) -> str:
     :return: Full EDAM URI
     """
     return f"http://edamontology.org/{edam_id}"
+
+
+def enrich_with_edam(doc) -> None:
+    """
+    Enrich a CommandDoc or ToolDoc with EDAM format information.
+    
+    Fills in edam_format and edam_uri fields for file_format objects
+    that have extensions but missing EDAM information.
+    
+    :param doc: CommandDoc or ToolDoc to enrich (modified in place)
+    :return: None
+    """
+    # Enrich options
+    for opt in doc.options:
+        if opt.file_format and opt.file_format.extension:
+            if not opt.file_format.edam_format:
+                edam_info = get_edam_format(opt.file_format.extension)
+                if edam_info:
+                    opt.file_format.edam_format = edam_info[0]
+                    opt.file_format.edam_uri = get_edam_uri(edam_info[0])
+    
+    # Enrich positionals
+    for pos in doc.positionals:
+        if pos.file_format and pos.file_format.extension:
+            if not pos.file_format.edam_format:
+                edam_info = get_edam_format(pos.file_format.extension)
+                if edam_info:
+                    pos.file_format.edam_format = edam_info[0]
+                    pos.file_format.edam_uri = get_edam_uri(edam_info[0])
+    
+    # For ToolDoc, also enrich subcommands (ToolDoc.subcommands is List[CommandDoc])
+    # For CommandDoc, subcommands is List[str], so we skip recursion
+    if hasattr(doc, 'subcommands') and doc.subcommands:
+        # Check if first subcommand is a CommandDoc object (not a string)
+        if doc.subcommands and not isinstance(doc.subcommands[0], str):
+            for subcmd in doc.subcommands:
+                enrich_with_edam(subcmd)
