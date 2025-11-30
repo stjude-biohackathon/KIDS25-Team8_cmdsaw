@@ -151,6 +151,7 @@ def build_tree(
     concurrency: int = DEFAULT_CONCURRENCY,
     use_cache: bool = True,
     review_subcommands: bool = False,
+    subcommand_help_format: str = "subcommand-help",
 ) -> Tuple[CmdSawResult, List[CommandDoc]]:
     """
     Build a complete documentation tree for a command and its subcommands.
@@ -184,6 +185,8 @@ def build_tree(
     :type use_cache: bool
     :param review_subcommands: Whether to enable interactive review of subcommands
     :type review_subcommands: bool
+    :param subcommand_help_format: Format for subcommand help invocation ('subcommand-help' or 'help-subcommand')
+    :type subcommand_help_format: str
     :return: Tuple of (complete result, list of all command docs)
     :rtype: Tuple[CmdSawResult, List[CommandDoc]]
     """
@@ -198,7 +201,7 @@ def build_tree(
     else:
         print("LLM cache disabled")
 
-    help_text, _ = try_help([bin_path], help_flags, timeout=timeout, env=env, cwd=cwd)
+    help_text, _ = try_help([bin_path], help_flags, timeout=timeout, env=env, cwd=cwd, subcommand_help_format=subcommand_help_format)
     version = try_version([bin_path], timeout=timeout, env=env, cwd=cwd)
     diagnostics.version_extracted = bool(version)
 
@@ -242,7 +245,7 @@ def build_tree(
         print(f"  Processing subcommand: {path} (depth={depth})")
         parts = path.split()
         bin_ = which_or_raise(parts[0])
-        help_t, _ = try_help([bin_] + parts[1:], help_flags, timeout=timeout, env=env, cwd=cwd)
+        help_t, _ = try_help([bin_] + parts[1:], help_flags, timeout=timeout, env=env, cwd=cwd, subcommand_help_format=subcommand_help_format)
         doc = parse_command_help(
             model_name=model_name,
             provider=provider,

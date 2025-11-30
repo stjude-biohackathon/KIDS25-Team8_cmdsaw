@@ -2,7 +2,7 @@ from __future__ import annotations
 import time
 import os
 import click
-from .constants import DEFAULT_MODEL, DEFAULT_TIMEOUT, DEFAULT_MAX_DEPTH, DEFAULT_CONCURRENCY, DEFAULT_TEMPERATURE, DEFAULT_PROVIDER
+from .constants import DEFAULT_MODEL, DEFAULT_TIMEOUT, DEFAULT_MAX_DEPTH, DEFAULT_CONCURRENCY, DEFAULT_TEMPERATURE, DEFAULT_PROVIDER, DEFAULT_SUBCOMMAND_HELP_FORMAT
 from .discovery import build_tree
 from .serialize import write_json
 from .wdl import emit_wdl
@@ -21,6 +21,7 @@ from .parsing.edam_mappings import enrich_with_edam
 @click.option("--max-depth", "max_depth", default=DEFAULT_MAX_DEPTH, show_default=True, help="Max subcommand recursion depth")
 @click.option("--concurrency", default=DEFAULT_CONCURRENCY, show_default=True, help="Max parallel subcommand parses")
 @click.option("--help-flags", default="--help -h", show_default=True, help="Help flags to try in order")
+@click.option("--subcommand-help-format", default=DEFAULT_SUBCOMMAND_HELP_FORMAT, show_default=True, type=click.Choice(["subcommand-help", "help-subcommand"]), help="Format for subcommand help invocation")
 @click.option("--workdir", type=click.Path(file_okay=False, exists=True), help="Working directory")
 @click.option("--env", multiple=True, help="Extra env vars: KEY=VAL", metavar="KEY=VAL")
 @click.option("--no-llm-cache", is_flag=True, default=False, help="Disable on-disk LLM parse cache")
@@ -28,7 +29,7 @@ from .parsing.edam_mappings import enrich_with_edam
 @click.option("--review-json", is_flag=True, default=False, help="Enable interactive review of JSON output before saving")
 @click.option("--llm-check", is_flag=True, default=False, help="Enable automatic LLM verification of parsed JSON")
 @click.option("--piped", is_flag=True, default=False, help="Enable piped output support for all output parameters with auto-generated filenames")
-def main(command, model, provider, temperature, google_api_key, output, wdl_out, timeout, max_depth, concurrency, help_flags, workdir, env, no_llm_cache, review_subcommands, review_json, llm_check, piped):
+def main(command, model, provider, temperature, google_api_key, output, wdl_out, timeout, max_depth, concurrency, help_flags, subcommand_help_format, workdir, env, no_llm_cache, review_subcommands, review_json, llm_check, piped):
     """
     Parse CLI help text using LLM and emit structured documentation.
 
@@ -58,6 +59,8 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
     :type concurrency: int
     :param help_flags: Space-separated help flags to try
     :type help_flags: str
+    :param subcommand_help_format: Format for subcommand help invocation ('subcommand-help' or 'help-subcommand')
+    :type subcommand_help_format: str
     :param workdir: Optional working directory for command execution
     :type workdir: str | None
     :param env: Tuple of KEY=VAL environment variable strings
@@ -114,6 +117,7 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
         concurrency=concurrency,
         use_cache=not no_llm_cache,
         review_subcommands=review_subcommands,
+        subcommand_help_format=subcommand_help_format,
     )
 
     click.echo(f"\nFound {len(all_docs)} total commands (including root)")
