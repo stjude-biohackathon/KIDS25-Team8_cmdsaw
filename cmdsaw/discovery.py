@@ -4,7 +4,7 @@ from typing import List, Dict, Optional, Mapping, Set, Tuple
 from .parsing.schema import CommandDoc, ToolDoc, CmdSawResult, ParseDiagnostics, ContainerInfo
 from .parsing.llm_parser import parse_command_help
 from .parsing.cache import ParseCache
-from .constants import DEFAULT_TIMEOUT, DEFAULT_MAX_DEPTH, DEFAULT_CONCURRENCY, SCHEMA_VERSION
+from .constants import DEFAULT_TIMEOUT, DEFAULT_MAX_DEPTH, DEFAULT_CONCURRENCY, SCHEMA_VERSION, DEFAULT_SUBCOMMAND_HELP_FORMAT
 from .runner import try_help, try_version, now_iso
 from .utils import which_or_raise
 from .containers import request_biocontainers
@@ -151,7 +151,7 @@ def build_tree(
     concurrency: int = DEFAULT_CONCURRENCY,
     use_cache: bool = True,
     review_subcommands: bool = False,
-    subcommand_help_format: str = "subcommand-help",
+    subcommand_help_format: str = DEFAULT_SUBCOMMAND_HELP_FORMAT,
 ) -> Tuple[CmdSawResult, List[CommandDoc]]:
     """
     Build a complete documentation tree for a command and its subcommands.

@@ -1,10 +1,10 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import Iterable, Mapping
-from .constants import VERSION_FLAG_CANDIDATES
+from .constants import VERSION_FLAG_CANDIDATES, DEFAULT_SUBCOMMAND_HELP_FORMAT
 from .utils import run_capture, extract_version_number
 
-def try_help(command_path: list[str], help_flags: Iterable[str], *, timeout: int, env: Mapping[str,str] | None, cwd: str | None, subcommand_help_format: str = "subcommand-help") -> tuple[str,int]:
+def try_help(command_path: list[str], help_flags: Iterable[str], *, timeout: int, env: Mapping[str,str] | None, cwd: str | None, subcommand_help_format: str = DEFAULT_SUBCOMMAND_HELP_FORMAT) -> tuple[str,int]:
     """
     Try multiple help flags to capture command help text.
 

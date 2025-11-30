@@ -179,8 +179,3 @@ def test_try_help_returns_empty_when_no_output():
         
         assert help_text == ""
         assert code == 1
-
-
-if __name__ == '__main__':
-    import pytest
-    pytest.main([__file__, '-v'])
