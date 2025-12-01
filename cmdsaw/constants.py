@@ -7,3 +7,4 @@ DEFAULT_CONCURRENCY = 1
 DEFAULT_MODEL = "gemma3:12b"
 DEFAULT_TEMPERATURE = 0.0
 DEFAULT_PROVIDER = "ollama"
+DEFAULT_SUBCOMMAND_HELP_FORMAT = "subcommand-help"  # Format: "subcommand-help", "help-subcommand", "tool-subcommand", or "subcommand-only"

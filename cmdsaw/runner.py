@@ -1,10 +1,10 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import Iterable, Mapping
-from .constants import VERSION_FLAG_CANDIDATES
+from .constants import VERSION_FLAG_CANDIDATES, DEFAULT_SUBCOMMAND_HELP_FORMAT
 from .utils import run_capture, extract_version_number
 
-def try_help(command_path: list[str], help_flags: Iterable[str], *, timeout: int, env: Mapping[str,str] | None, cwd: str | None) -> tuple[str,int]:
+def try_help(command_path: list[str], help_flags: Iterable[str], *, timeout: int, env: Mapping[str,str] | None, cwd: str | None, subcommand_help_format: str = DEFAULT_SUBCOMMAND_HELP_FORMAT) -> tuple[str,int]:
     """
     Try multiple help flags to capture command help text.
 
@@ -21,18 +21,61 @@ def try_help(command_path: list[str], help_flags: Iterable[str], *, timeout: int
     :type env: Mapping[str,str] | None
     :param cwd: Optional working directory for command execution
     :type cwd: str | None
+    :param subcommand_help_format: Format for subcommand help invocation ('subcommand-help', 'help-subcommand', 'tool-subcommand', or 'subcommand-only')
+    :type subcommand_help_format: str
     :return: Tuple of (help text, exit code)
     :rtype: tuple[str,int]
     """
     print(f"Invoking help for: {' '.join(command_path)}")
-    for hf in help_flags:
-        if hf == "help":
-            cmdline = command_path + ["help"]
+    
+    # For root command (no subcommands), always use normal format
+    if len(command_path) == 1:
+        for hf in help_flags:
+            if hf == "help":
+                cmdline = command_path + ["help"]
+            else:
+                cmdline = command_path + [hf]
+            out, code = run_capture(cmdline, timeout=timeout, env=env, cwd=cwd)
+            if out:
+                return out, code
+    else:
+        # For subcommands, use the specified format
+        base_cmd = [command_path[0]]  # First element is the base command
+        subcommands = command_path[1:]  # Rest are subcommands
+        
+        # Handle formats that don't use help flags
+        if subcommand_help_format == "tool-subcommand":
+            # Format: TOOL SUBCOMMAND (no help flag)
+            cmdline = command_path
+            out, code = run_capture(cmdline, timeout=timeout, env=env, cwd=cwd)
+            if out:
+                return out, code
+        elif subcommand_help_format == "subcommand-only":
+            # Format: SUBCOMMAND (no tool prefix, no help flag)
+            cmdline = subcommands
+            out, code = run_capture(cmdline, timeout=timeout, env=env, cwd=cwd)
+            if out:
+                return out, code
         else:
-            cmdline = command_path + [hf]
-        out, code = run_capture(cmdline, timeout=timeout, env=env, cwd=cwd)
-        if out:
-            return out, code
+            # Handle formats that use help flags
+            for hf in help_flags:
+                if subcommand_help_format == "help-subcommand":
+                    # Format: TOOL --help SUBCOMMAND (e.g., samtools --help view)
+                    if hf == "help":
+                        cmdline = base_cmd + ["help"] + subcommands
+                    else:
+                        cmdline = base_cmd + [hf] + subcommands
+                else:
+                    # Default format: TOOL SUBCOMMAND --help (e.g., samtools view --help)
+                    if hf == "help":
+                        cmdline = command_path + ["help"]
+                    else:
+                        cmdline = command_path + [hf]
+                
+                out, code = run_capture(cmdline, timeout=timeout, env=env, cwd=cwd)
+                if out:
+                    return out, code
+    
     return "", 1
 
 def try_version(command_path: list[str], *, timeout: int, env: Mapping[str,str] | None, cwd: str | None) -> str | None:
