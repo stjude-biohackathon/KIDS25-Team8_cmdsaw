@@ -29,7 +29,8 @@ from .parsing.edam_mappings import enrich_with_edam
 @click.option("--review-json", is_flag=True, default=False, help="Enable interactive review of JSON output before saving")
 @click.option("--llm-check", is_flag=True, default=False, help="Enable automatic LLM verification of parsed JSON")
 @click.option("--piped", is_flag=True, default=False, help="Enable piped output support for all output parameters with auto-generated filenames")
-def main(command, model, provider, temperature, google_api_key, output, wdl_out, timeout, max_depth, concurrency, help_flags, subcommand_help_format, workdir, env, no_llm_cache, review_subcommands, review_json, llm_check, piped):
+@click.option("--format-wdl", is_flag=True, default=False, help="Format the WDL output file using 'sprocket format overwrite'")
+def main(command, model, provider, temperature, google_api_key, output, wdl_out, timeout, max_depth, concurrency, help_flags, subcommand_help_format, workdir, env, no_llm_cache, review_subcommands, review_json, llm_check, piped, format_wdl):
     """
     Parse CLI help text using LLM and emit structured documentation.
 
@@ -75,6 +76,8 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
     :type llm_check: bool
     :param piped: Whether to enable piped output support for all output parameters
     :type piped: bool
+    :param format_wdl: Whether to format the WDL output using sprocket
+    :type format_wdl: bool
     :return: None
     :rtype: None
     """
@@ -168,7 +171,7 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
     click.echo(f"\nWriting JSON output to: {output}")
     write_json(output, result)
     click.echo(f"Generating WDL tasks to: {wdl_out}")
-    emit_wdl(tool_name=command, docs=all_docs, out_path=wdl_out, model_name=model, provider=provider, temperature=temperature, google_api_key=google_api_key, container_info=result.tool.container_info)
+    emit_wdl(tool_name=command, docs=all_docs, out_path=wdl_out, model_name=model, provider=provider, temperature=temperature, google_api_key=google_api_key, container_info=result.tool.container_info, format_wdl=format_wdl)
     
     elapsed_time = time.time() - start_time
     click.echo(f"\nTotal execution time: {elapsed_time:.2f} seconds")

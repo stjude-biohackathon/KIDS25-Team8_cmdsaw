@@ -1,5 +1,7 @@
 from __future__ import annotations
 import re
+import subprocess
+import shutil
 from typing import List, Optional
 from .parsing.schema import CommandDoc, OptionDoc
 from .parsing.resource_estimator import estimate_resources, ResourceEstimate
@@ -20,6 +22,37 @@ def _sanitize_task_name(path: str) -> str:
     if not s or not s[0].isalpha():
         s = f"t_{s}"
     return s
+
+def _check_sprocket_available() -> bool:
+    """
+    Check if sprocket is available in the system PATH.
+
+    :return: True if sprocket is available, False otherwise
+    :rtype: bool
+    """
+    return shutil.which("sprocket") is not None
+
+def _format_wdl_with_sprocket(wdl_path: str) -> bool:
+    """
+    Format a WDL file using sprocket format overwrite.
+
+    Runs 'sprocket format overwrite <wdl_path>' to format the WDL file in place.
+
+    :param wdl_path: Path to the WDL file to format
+    :type wdl_path: str
+    :return: True if formatting succeeded, False otherwise
+    :rtype: bool
+    """
+    try:
+        result = subprocess.run(
+            ["sprocket", "format", "overwrite", wdl_path],
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        return result.returncode == 0
+    except (subprocess.TimeoutExpired, subprocess.SubprocessError, FileNotFoundError):
+        return False
 
 def _sanitize_var_name(name: str) -> str:
     """
@@ -309,13 +342,14 @@ def _task_for(doc: CommandDoc, model_name: str, provider: str = "ollama", temper
     }}
 }}"""
 
-def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_name: str, provider: str = "ollama", temperature: float = 0.0, google_api_key: Optional[str] = None, container_info = None) -> None:
+def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_name: str, provider: str = "ollama", temperature: float = 0.0, google_api_key: Optional[str] = None, container_info = None, format_wdl: bool = False) -> None:
     """
     Write WDL task definitions for all commands to a file.
 
     Generates WDL 1.2 tasks for each command and subcommand, handling
     name collisions by appending numeric suffixes. Skips commands that
-    require subcommands and have no standalone functionality.
+    require subcommands and have no standalone functionality. Optionally
+    formats the output using sprocket.
 
     :param tool_name: Name of the root tool (unused but kept for API compatibility)
     :type tool_name: str
@@ -333,6 +367,8 @@ def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_nam
     :type google_api_key: str
     :param container_info: Container information (docker, singularity, bioconda)
     :type container_info: ContainerInfo | None
+    :param format_wdl: Whether to format the WDL file using sprocket
+    :type format_wdl: bool
     :return: None
     :rtype: None
     """
@@ -367,3 +403,17 @@ def emit_wdl(*, tool_name: str, docs: List[CommandDoc], out_path: str, model_nam
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(header + "\n\n" + "\n\n".join(tasks) + "\n")
     print(f"WDL tasks written to: {out_path}")
+    
+    # Format with sprocket if requested
+    if format_wdl:
+        if not _check_sprocket_available():
+            print("\nWarning: sprocket is not installed or not found in PATH.")
+            print("Skipping WDL formatting. To install sprocket, visit:")
+            print("  https://github.com/stjude-rust-labs/sprocket")
+        else:
+            print(f"\nFormatting WDL file with sprocket...")
+            if _format_wdl_with_sprocket(out_path):
+                print(f"WDL file formatted successfully")
+            else:
+                print(f"Warning: Failed to format WDL file with sprocket")
+                print(f"The unformatted WDL file is still available at: {out_path}")
