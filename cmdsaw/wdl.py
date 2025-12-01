@@ -162,6 +162,11 @@ def _inputs_block(cmd: CommandDoc, est: ResourceEstimate) -> tuple[str, list[str
         '  "cpu": "Estimated CPU cores"',
         '  "memory_gb": "Estimated RAM in GB"'
     ])
+    
+    # Add pipe_out parameter if piped output is enabled
+    if cmd.piped_output:
+        lines.append('String? pipe_out')
+        metas.append('  "pipe_out": "Output file for piped output redirection"')
     for opt in cmd.options:
         # Skip --help and -h options
         if opt.long == "--help" or opt.short == "-h":
@@ -219,7 +224,8 @@ def _command_block(cmd: CommandDoc) -> str:
     Generate WDL command block for a command.
 
     Constructs the command line with all options and positional arguments
-    using WDL placeholder syntax.
+    using WDL placeholder syntax. If piped output is enabled, adds output
+    redirection using the pipe_out parameter.
 
     :param cmd: Command documentation object
     :type cmd: CommandDoc
@@ -239,6 +245,11 @@ def _command_block(cmd: CommandDoc) -> str:
             parts.append(f"~{{{var}}}")
         else:
             parts.append(f'~{{if defined({var}) then {var} else ""}}')
+    
+    # Add output redirection if piped output is enabled
+    if cmd.piped_output:
+        parts.append('~{if defined(pipe_out) then "> " + pipe_out else ""}')
+    
     return " \\\n    ".join(parts)
 
 def _task_for(doc: CommandDoc, model_name: str, provider: str = "ollama", temperature: float = 0.0, google_api_key: Optional[str] = None, container_info = None) -> str:
