@@ -43,29 +43,38 @@ def try_help(command_path: list[str], help_flags: Iterable[str], *, timeout: int
         base_cmd = [command_path[0]]  # First element is the base command
         subcommands = command_path[1:]  # Rest are subcommands
         
-        for hf in help_flags:
-            if subcommand_help_format == "help-subcommand":
-                # Format: TOOL --help SUBCOMMAND (e.g., samtools --help view)
-                if hf == "help":
-                    cmdline = base_cmd + ["help"] + subcommands
-                else:
-                    cmdline = base_cmd + [hf] + subcommands
-            elif subcommand_help_format == "tool-subcommand":
-                # Format: TOOL SUBCOMMAND (no help flag)
-                cmdline = command_path
-            elif subcommand_help_format == "subcommand-only":
-                # Format: SUBCOMMAND (no tool prefix, no help flag)
-                cmdline = subcommands
-            else:
-                # Default format: TOOL SUBCOMMAND --help (e.g., samtools view --help)
-                if hf == "help":
-                    cmdline = command_path + ["help"]
-                else:
-                    cmdline = command_path + [hf]
-            
+        # Handle formats that don't use help flags
+        if subcommand_help_format == "tool-subcommand":
+            # Format: TOOL SUBCOMMAND (no help flag)
+            cmdline = command_path
             out, code = run_capture(cmdline, timeout=timeout, env=env, cwd=cwd)
             if out:
                 return out, code
+        elif subcommand_help_format == "subcommand-only":
+            # Format: SUBCOMMAND (no tool prefix, no help flag)
+            cmdline = subcommands
+            out, code = run_capture(cmdline, timeout=timeout, env=env, cwd=cwd)
+            if out:
+                return out, code
+        else:
+            # Handle formats that use help flags
+            for hf in help_flags:
+                if subcommand_help_format == "help-subcommand":
+                    # Format: TOOL --help SUBCOMMAND (e.g., samtools --help view)
+                    if hf == "help":
+                        cmdline = base_cmd + ["help"] + subcommands
+                    else:
+                        cmdline = base_cmd + [hf] + subcommands
+                else:
+                    # Default format: TOOL SUBCOMMAND --help (e.g., samtools view --help)
+                    if hf == "help":
+                        cmdline = command_path + ["help"]
+                    else:
+                        cmdline = command_path + [hf]
+                
+                out, code = run_capture(cmdline, timeout=timeout, env=env, cwd=cwd)
+                if out:
+                    return out, code
     
     return "", 1
 
