@@ -179,3 +179,81 @@ def test_try_help_returns_empty_when_no_output():
         
         assert help_text == ""
         assert code == 1
+
+
+def test_try_help_tool_subcommand_format():
+    """Test that tool-subcommand format works: TOOL SUBCOMMAND (no help flag)"""
+    with patch('cmdsaw.runner.run_capture') as mock_run:
+        mock_run.return_value = ("subcommand output", 0)
+        
+        help_text, code = try_help(
+            ['git', 'status'], 
+            ['--help'],  # This should be ignored for tool-subcommand format
+            timeout=30, 
+            env=None, 
+            cwd=None, 
+            subcommand_help_format='tool-subcommand'
+        )
+        
+        # Should use format: git status (no help flag)
+        mock_run.assert_called_once_with(['git', 'status'], timeout=30, env=None, cwd=None)
+        assert help_text == "subcommand output"
+        assert code == 0
+
+
+def test_try_help_subcommand_only_format():
+    """Test that subcommand-only format works: SUBCOMMAND (no tool prefix)"""
+    with patch('cmdsaw.runner.run_capture') as mock_run:
+        mock_run.return_value = ("subcommand output", 0)
+        
+        help_text, code = try_help(
+            ['mytool', 'status'], 
+            ['--help'],  # This should be ignored for subcommand-only format
+            timeout=30, 
+            env=None, 
+            cwd=None, 
+            subcommand_help_format='subcommand-only'
+        )
+        
+        # Should use format: status (just the subcommand)
+        mock_run.assert_called_once_with(['status'], timeout=30, env=None, cwd=None)
+        assert help_text == "subcommand output"
+        assert code == 0
+
+
+def test_try_help_nested_subcommand_tool_subcommand_format():
+    """Test nested subcommand with tool-subcommand format."""
+    with patch('cmdsaw.runner.run_capture') as mock_run:
+        mock_run.return_value = ("nested output", 0)
+        
+        help_text, code = try_help(
+            ['git', 'remote', 'add'], 
+            ['--help'], 
+            timeout=30, 
+            env=None, 
+            cwd=None, 
+            subcommand_help_format='tool-subcommand'
+        )
+        
+        # Should use format: git remote add (no help flag)
+        mock_run.assert_called_once_with(['git', 'remote', 'add'], timeout=30, env=None, cwd=None)
+        assert help_text == "nested output"
+
+
+def test_try_help_nested_subcommand_subcommand_only_format():
+    """Test nested subcommand with subcommand-only format."""
+    with patch('cmdsaw.runner.run_capture') as mock_run:
+        mock_run.return_value = ("nested output", 0)
+        
+        help_text, code = try_help(
+            ['git', 'remote', 'add'], 
+            ['--help'], 
+            timeout=30, 
+            env=None, 
+            cwd=None, 
+            subcommand_help_format='subcommand-only'
+        )
+        
+        # Should use format: remote add (just subcommands)
+        mock_run.assert_called_once_with(['remote', 'add'], timeout=30, env=None, cwd=None)
+        assert help_text == "nested output"

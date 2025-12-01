@@ -21,7 +21,7 @@ from .parsing.edam_mappings import enrich_with_edam
 @click.option("--max-depth", "max_depth", default=DEFAULT_MAX_DEPTH, show_default=True, help="Max subcommand recursion depth")
 @click.option("--concurrency", default=DEFAULT_CONCURRENCY, show_default=True, help="Max parallel subcommand parses")
 @click.option("--help-flags", default="--help -h", show_default=True, help="Help flags to try in order")
-@click.option("--subcommand-help-format", default=DEFAULT_SUBCOMMAND_HELP_FORMAT, show_default=True, type=click.Choice(["subcommand-help", "help-subcommand"]), help="Format for subcommand help invocation")
+@click.option("--subcommand-help-format", default=DEFAULT_SUBCOMMAND_HELP_FORMAT, show_default=True, type=click.Choice(["subcommand-help", "help-subcommand", "tool-subcommand", "subcommand-only"]), help="Format for subcommand help invocation")
 @click.option("--workdir", type=click.Path(file_okay=False, exists=True), help="Working directory")
 @click.option("--env", multiple=True, help="Extra env vars: KEY=VAL", metavar="KEY=VAL")
 @click.option("--no-llm-cache", is_flag=True, default=False, help="Disable on-disk LLM parse cache")
@@ -59,7 +59,7 @@ def main(command, model, provider, temperature, google_api_key, output, wdl_out,
     :type concurrency: int
     :param help_flags: Space-separated help flags to try
     :type help_flags: str
-    :param subcommand_help_format: Format for subcommand help invocation ('subcommand-help' or 'help-subcommand')
+    :param subcommand_help_format: Format for subcommand help invocation ('subcommand-help', 'help-subcommand', 'tool-subcommand', or 'subcommand-only')
     :type subcommand_help_format: str
     :param workdir: Optional working directory for command execution
     :type workdir: str | None

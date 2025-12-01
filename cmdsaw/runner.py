@@ -21,7 +21,7 @@ def try_help(command_path: list[str], help_flags: Iterable[str], *, timeout: int
     :type env: Mapping[str,str] | None
     :param cwd: Optional working directory for command execution
     :type cwd: str | None
-    :param subcommand_help_format: Format for subcommand help invocation ('subcommand-help' or 'help-subcommand')
+    :param subcommand_help_format: Format for subcommand help invocation ('subcommand-help', 'help-subcommand', 'tool-subcommand', or 'subcommand-only')
     :type subcommand_help_format: str
     :return: Tuple of (help text, exit code)
     :rtype: tuple[str,int]
@@ -50,6 +50,12 @@ def try_help(command_path: list[str], help_flags: Iterable[str], *, timeout: int
                     cmdline = base_cmd + ["help"] + subcommands
                 else:
                     cmdline = base_cmd + [hf] + subcommands
+            elif subcommand_help_format == "tool-subcommand":
+                # Format: TOOL SUBCOMMAND (no help flag)
+                cmdline = command_path
+            elif subcommand_help_format == "subcommand-only":
+                # Format: SUBCOMMAND (no tool prefix, no help flag)
+                cmdline = subcommands
             else:
                 # Default format: TOOL SUBCOMMAND --help (e.g., samtools view --help)
                 if hf == "help":

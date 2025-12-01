@@ -185,7 +185,7 @@ def build_tree(
     :type use_cache: bool
     :param review_subcommands: Whether to enable interactive review of subcommands
     :type review_subcommands: bool
-    :param subcommand_help_format: Format for subcommand help invocation ('subcommand-help' or 'help-subcommand')
+    :param subcommand_help_format: Format for subcommand help invocation ('subcommand-help', 'help-subcommand', 'tool-subcommand', or 'subcommand-only')
     :type subcommand_help_format: str
     :return: Tuple of (complete result, list of all command docs)
     :rtype: Tuple[CmdSawResult, List[CommandDoc]]

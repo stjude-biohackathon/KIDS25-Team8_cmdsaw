@@ -152,6 +152,8 @@ cmdsaw --command <tool-name> [OPTIONS]
 - `--subcommand-help-format <format>` - Format for subcommand help invocation (default: subcommand-help)
   - `subcommand-help` - Use format: `TOOL SUBCOMMAND --help` (e.g., `samtools view --help`)
   - `help-subcommand` - Use format: `TOOL --help SUBCOMMAND` (e.g., `samtools --help view`)
+  - `tool-subcommand` - Use format: `TOOL SUBCOMMAND` (no help flag, e.g., `samtools view`)
+  - `subcommand-only` - Use format: `SUBCOMMAND` (subcommand alone, e.g., `view`)
 
 ### Interactive Subcommand Review
 
