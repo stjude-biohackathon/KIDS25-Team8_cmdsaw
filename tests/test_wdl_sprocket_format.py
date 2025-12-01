@@ -2,7 +2,6 @@
 import tempfile
 import os
 import subprocess
-from pathlib import Path
 from unittest.mock import patch, MagicMock
 from cmdsaw.wdl import _check_sprocket_available, _format_wdl_with_sprocket, emit_wdl
 from cmdsaw.parsing.schema import CommandDoc, OptionDoc
